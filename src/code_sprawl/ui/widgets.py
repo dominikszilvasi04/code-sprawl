@@ -77,8 +77,9 @@ class BuildingWidget(Static):
 
 
 class DistrictWidget(Widget):
-    def __init__(self, district: District, *, max_buildings: int = 64) -> None:
-        super().__init__(classes="district")
+    def __init__(self, district: District, *, max_buildings: int = 64, selected: bool = False) -> None:
+        classes = "district selected-district" if selected else "district"
+        super().__init__(classes=classes)
         self.district = district
         self.max_buildings = max_buildings
 

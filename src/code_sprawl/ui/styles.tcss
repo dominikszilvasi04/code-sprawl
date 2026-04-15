@@ -13,6 +13,15 @@ Screen {
     border-bottom: heavy #00f5ff;
 }
 
+#district-strip {
+    dock: top;
+    height: 1;
+    padding: 0 1;
+    background: #06111f;
+    color: #7fe9ff;
+    border-bottom: solid #1a3652;
+}
+
 #main-layout {
     height: 1fr;
 }
@@ -48,6 +57,11 @@ Screen {
     border: none;
     padding: 0 0 0 0;
     background: #070b16;
+}
+
+.selected-district {
+    border-left: heavy #00f5ff;
+    padding-left: 1;
 }
 
 .district-title {

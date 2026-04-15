@@ -22,6 +22,10 @@ class CodeSprawlApp(App):
         ("r", "reload", "Rescan"),
         ("n", "next_page", "Next Districts"),
         ("p", "prev_page", "Prev Districts"),
+        ("j", "next_district", "Next District"),
+        ("k", "prev_district", "Prev District"),
+        ("enter", "focus_selected", "Focus District"),
+        ("b", "clear_focus", "Back to All"),
         ("s", "cycle_sort", "Sort"),
         ("d", "cycle_debt_filter", "Debt"),
         ("e", "toggle_empty", "Empty Dirs"),
@@ -41,10 +45,13 @@ class CodeSprawlApp(App):
         self._sort_index = 0
         self._debt_filters = ("all", "medium+", "high+", "critical")
         self._debt_filter_index = 0
+        self._selected_district_index = 0
+        self._focused_district_name: str | None = None
 
     def compose(self) -> ComposeResult:
         yield Header()
         yield Label("Code-Sprawl // scan your repo, hunt debt, vibe in neon", id="banner")
+        yield Static(id="district-strip")
         with Horizontal(id="main-layout"):
             yield Vertical(id="city-pane")
             yield Static(id="sidebar")
@@ -70,16 +77,19 @@ class CodeSprawlApp(App):
     def action_cycle_sort(self) -> None:
         self._sort_index = (self._sort_index + 1) % len(self._sort_modes)
         self._district_page = 0
+        self._selected_district_index = 0
         self._rerender_if_loaded()
 
     def action_cycle_debt_filter(self) -> None:
         self._debt_filter_index = (self._debt_filter_index + 1) % len(self._debt_filters)
         self._district_page = 0
+        self._selected_district_index = 0
         self._rerender_if_loaded()
 
     def action_toggle_empty(self) -> None:
         self._show_empty_districts = not self._show_empty_districts
         self._district_page = 0
+        self._selected_district_index = 0
         self._rerender_if_loaded()
 
     def action_more_density(self) -> None:
@@ -93,16 +103,66 @@ class CodeSprawlApp(App):
     def action_next_page(self) -> None:
         if self._snapshot is None:
             return
-        visible = self._filtered_sorted_districts(self._snapshot)
+        visible = self._districts_for_view(self._snapshot)
         max_page = max(0, (len(visible) - 1) // self._districts_per_page)
         self._district_page = min(max_page, self._district_page + 1)
+        self._selected_district_index = min(
+            len(visible) - 1,
+            self._district_page * self._districts_per_page,
+        )
         self._render_snapshot(self._snapshot)
 
     def action_prev_page(self) -> None:
         if self._snapshot is None:
             return
         self._district_page = max(0, self._district_page - 1)
+        visible = self._districts_for_view(self._snapshot)
+        if visible:
+            self._selected_district_index = min(
+                len(visible) - 1,
+                self._district_page * self._districts_per_page,
+            )
         self._render_snapshot(self._snapshot)
+
+    def action_next_district(self) -> None:
+        if self._snapshot is None:
+            return
+        districts = self._districts_for_view(self._snapshot)
+        if not districts:
+            return
+        self._selected_district_index = min(len(districts) - 1, self._selected_district_index + 1)
+        self._district_page = self._selected_district_index // self._districts_per_page
+        self._render_snapshot(self._snapshot)
+
+    def action_prev_district(self) -> None:
+        if self._snapshot is None:
+            return
+        districts = self._districts_for_view(self._snapshot)
+        if not districts:
+            return
+        self._selected_district_index = max(0, self._selected_district_index - 1)
+        self._district_page = self._selected_district_index // self._districts_per_page
+        self._render_snapshot(self._snapshot)
+
+    def action_focus_selected(self) -> None:
+        if self._snapshot is None:
+            return
+        districts = self._filtered_sorted_districts(self._snapshot)
+        if not districts:
+            return
+        self._selected_district_index = min(self._selected_district_index, len(districts) - 1)
+        self._focused_district_name = districts[self._selected_district_index].name
+        self._district_page = 0
+        self._selected_district_index = 0
+        self._render_snapshot(self._snapshot)
+
+    def action_clear_focus(self) -> None:
+        if self._focused_district_name is None:
+            return
+        self._focused_district_name = None
+        self._district_page = 0
+        self._selected_district_index = 0
+        self._rerender_if_loaded()
 
     async def _load_city_async(self) -> None:
         snapshot = await asyncio.to_thread(
@@ -117,6 +177,15 @@ class CodeSprawlApp(App):
     def _rerender_if_loaded(self) -> None:
         if self._snapshot is not None:
             self._render_snapshot(self._snapshot)
+
+    def _districts_for_view(self, snapshot: CitySnapshot) -> list[District]:
+        districts = self._filtered_sorted_districts(snapshot)
+        if self._focused_district_name:
+            focused = [d for d in districts if d.name == self._focused_district_name]
+            if focused:
+                return focused
+            self._focused_district_name = None
+        return districts
 
     def _debt_level_rank(self, debt_level: str) -> int:
         return {"low": 0, "medium": 1, "high": 2, "critical": 3}.get(debt_level, 0)
@@ -160,7 +229,12 @@ class CodeSprawlApp(App):
         city_pane = self.query_one("#city-pane", Vertical)
         city_pane.remove_children()
 
-        districts_all = self._filtered_sorted_districts(snapshot)
+        districts_all = self._districts_for_view(snapshot)
+        if districts_all:
+            self._selected_district_index = min(self._selected_district_index, len(districts_all) - 1)
+        else:
+            self._selected_district_index = 0
+
         max_page = max(0, (len(districts_all) - 1) // self._districts_per_page)
         self._district_page = min(self._district_page, max_page)
 
@@ -168,8 +242,17 @@ class CodeSprawlApp(App):
         end = start + self._districts_per_page
         districts = districts_all[start:end]
 
-        for district in districts:
-            city_pane.mount(DistrictWidget(district, max_buildings=self._max_buildings_per_district))
+        self._render_district_strip(districts_all)
+
+        for offset, district in enumerate(districts):
+            absolute_index = start + offset
+            city_pane.mount(
+                DistrictWidget(
+                    district,
+                    max_buildings=self._max_buildings_per_district,
+                    selected=absolute_index == self._selected_district_index,
+                )
+            )
 
         if not districts_all:
             city_pane.mount(Static("[yellow]No folders matched current filters.[/]"))
@@ -180,6 +263,7 @@ class CodeSprawlApp(App):
         hidden_by_page = max(0, len(districts_all) - len(districts))
         sort_mode = self._sort_modes[self._sort_index]
         debt_filter = self._debt_filters[self._debt_filter_index]
+        focus_state = self._focused_district_name or "(all)"
         self._set_sidebar(
             title="Welcome to the Sprawl",
             body=(
@@ -187,6 +271,7 @@ class CodeSprawlApp(App):
                 f"Districts: {len(snapshot.districts)}\n"
                 f"Visible districts: {len(districts_all)}\n"
                 f"View: page {current_page}/{total_pages} (n/p to navigate)\n"
+            f"Focused district: {focus_state}\n"
                 f"Sort: {sort_mode} | Debt: {debt_filter}\n"
                 f"Density cap: {self._max_buildings_per_district} per district\n"
                 f"Show empty: {'ON' if self._show_empty_districts else 'OFF'}\n"
@@ -197,10 +282,32 @@ class CodeSprawlApp(App):
                 f"{snapshot.scan_stats.files_skipped_non_text} non-text\n"
                 f"Hidden by paging: {hidden_by_page}\n"
                 f"Scanned: {snapshot.scanned_at.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
-                "Controls: n/p pages, s sort, d debt, e empty, [ ] density\n"
+                "Controls: n/p page, j/k district, Enter focus, b back\n"
+                "More: s sort, d debt, e empty, [ ] density\n"
                 "Click any building to inspect details."
             ),
         )
+
+    def _render_district_strip(self, districts_all: list[District]) -> None:
+        strip = self.query_one("#district-strip", Static)
+        if not districts_all:
+            strip.update("[dim]DISTRICTS: none[/]")
+            return
+
+        items: list[str] = []
+        start = max(0, self._selected_district_index - 6)
+        end = min(len(districts_all), start + 13)
+
+        for idx in range(start, end):
+            name = districts_all[idx].name
+            short = name if len(name) <= 16 else f"...{name[-13:]}"
+            if idx == self._selected_district_index:
+                items.append(f"[bold black on cyan] {short} [/]")
+            else:
+                items.append(f"[cyan]{short}[/]")
+
+        mode = "FOCUS" if self._focused_district_name else "ALL"
+        strip.update(f"[bold]DISTRICTS[{mode}][/]: " + "  ".join(items))
 
     def _set_sidebar(self, title: str, body: str) -> None:
         sidebar = self.query_one("#sidebar", Static)

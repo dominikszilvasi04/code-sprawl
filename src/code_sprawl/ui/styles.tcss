@@ -1,0 +1,92 @@
+Screen {
+    background: #040407;
+    color: #d8f7ff;
+}
+
+#banner {
+    dock: top;
+    height: 3;
+    padding: 1 2;
+    color: #00f5ff;
+    text-style: bold;
+    background: #0b1020;
+    border-bottom: heavy #00f5ff;
+}
+
+#main-layout {
+    height: 1fr;
+}
+
+#city-pane {
+    width: 1fr;
+    padding: 1 2;
+}
+
+#sidebar {
+    width: 38;
+    border-left: heavy #ff00aa;
+    padding: 1 2;
+    background: #0f0611;
+    color: #ffd6f2;
+}
+
+#timeline-panel {
+    dock: bottom;
+    height: 4;
+    padding: 0 2;
+    border-top: heavy #00f5ff;
+    background: #071018;
+}
+
+#timeline-title {
+    color: #9de8ff;
+}
+
+.district {
+    margin-bottom: 1;
+    border: round #2b395a;
+    padding: 0 1 1 1;
+    background: #070b16;
+}
+
+.district-title {
+    color: #8bd3ff;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+.district-row {
+    height: auto;
+}
+
+.building {
+    width: 8;
+    margin-right: 1;
+    content-align: center bottom;
+    color: #8ed8ff;
+}
+
+.building:hover {
+    color: #00ffff;
+    text-style: bold;
+}
+
+.high-debt {
+    color: #ff5d7a;
+}
+
+.ext-py {
+    color: #66d9ff;
+}
+
+.ext-md {
+    color: #9cff8e;
+}
+
+.ext-js, .ext-ts, .ext-tsx, .ext-jsx {
+    color: #ffe080;
+}
+
+.ext-json, .ext-yaml, .ext-yml, .ext-toml {
+    color: #c9b2ff;
+}

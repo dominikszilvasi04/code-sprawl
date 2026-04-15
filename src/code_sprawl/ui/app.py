@@ -31,6 +31,8 @@ class CodeSprawlApp(App):
         ("e", "toggle_empty", "Empty Dirs"),
         ("]", "more_density", "More Buildings"),
         ("[", "less_density", "Fewer Buildings"),
+        ("=", "more_districts", "More Districts"),
+        ("-", "less_districts", "Fewer Districts"),
     ]
 
     def __init__(self, repo_path: Path) -> None:
@@ -98,6 +100,18 @@ class CodeSprawlApp(App):
 
     def action_less_density(self) -> None:
         self._max_buildings_per_district = max(16, self._max_buildings_per_district - 16)
+        self._rerender_if_loaded()
+
+    def action_more_districts(self) -> None:
+        self._districts_per_page = min(12, self._districts_per_page + 1)
+        self._district_page = 0
+        self._selected_district_index = 0
+        self._rerender_if_loaded()
+
+    def action_less_districts(self) -> None:
+        self._districts_per_page = max(2, self._districts_per_page - 1)
+        self._district_page = 0
+        self._selected_district_index = 0
         self._rerender_if_loaded()
 
     def action_next_page(self) -> None:
@@ -273,6 +287,7 @@ class CodeSprawlApp(App):
                 f"View: page {current_page}/{total_pages} (n/p to navigate)\n"
             f"Focused district: {focus_state}\n"
                 f"Sort: {sort_mode} | Debt: {debt_filter}\n"
+                f"Districts/page: {self._districts_per_page}\n"
                 f"Density cap: {self._max_buildings_per_district} per district\n"
                 f"Show empty: {'ON' if self._show_empty_districts else 'OFF'}\n"
                 f"Repo TODOs: {snapshot.todo_count} {weather}\n"
@@ -283,7 +298,7 @@ class CodeSprawlApp(App):
                 f"Hidden by paging: {hidden_by_page}\n"
                 f"Scanned: {snapshot.scanned_at.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
                 "Controls: n/p page, j/k district, Enter focus, b back\n"
-                "More: s sort, d debt, e empty, [ ] density\n"
+                "More: s sort, d debt, e empty, [ ] density, -/= districts\n"
                 "Click any building to inspect details."
             ),
         )

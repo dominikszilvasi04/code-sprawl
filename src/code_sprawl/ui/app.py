@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import replace
 from pathlib import Path
 
+from textual import events
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Footer, Header, Label, Static
@@ -33,6 +34,8 @@ class CodeSprawlApp(App):
         ("[", "less_density", "Fewer Buildings"),
         ("=", "more_districts", "More Districts"),
         ("-", "less_districts", "Fewer Districts"),
+        ("period", "wider_street", "Wider Streets"),
+        ("comma", "narrower_street", "Narrower Streets"),
     ]
 
     def __init__(self, repo_path: Path) -> None:
@@ -49,6 +52,8 @@ class CodeSprawlApp(App):
         self._debt_filter_index = 0
         self._selected_district_index = 0
         self._focused_district_name: str | None = None
+        self._columns_per_row = 22
+        self._manual_street_width = False
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -68,6 +73,10 @@ class CodeSprawlApp(App):
         city_pane.remove_children()
         city_pane.mount(Static("[cyan]Scanning repository...[/]"))
         self.run_worker(self._load_city_async(), exclusive=True)
+
+    def on_resize(self, event: events.Resize) -> None:
+        self._recompute_columns_per_row()
+        self._rerender_if_loaded()
 
     def action_reload(self) -> None:
         self._set_sidebar("Rescanning...", "Rebuilding districts and recalculating debt.")
@@ -112,6 +121,16 @@ class CodeSprawlApp(App):
         self._districts_per_page = max(2, self._districts_per_page - 1)
         self._district_page = 0
         self._selected_district_index = 0
+        self._rerender_if_loaded()
+
+    def action_wider_street(self) -> None:
+        self._manual_street_width = True
+        self._columns_per_row = max(6, self._columns_per_row - 2)
+        self._rerender_if_loaded()
+
+    def action_narrower_street(self) -> None:
+        self._manual_street_width = True
+        self._columns_per_row = min(48, self._columns_per_row + 2)
         self._rerender_if_loaded()
 
     def action_next_page(self) -> None:
@@ -192,6 +211,21 @@ class CodeSprawlApp(App):
         if self._snapshot is not None:
             self._render_snapshot(self._snapshot)
 
+    def _recompute_columns_per_row(self) -> None:
+        try:
+            city_width = self.query_one("#city-pane", Vertical).size.width
+        except Exception:
+            return
+
+        if city_width <= 0:
+            return
+
+        auto_columns = max(8, min(48, city_width // 4))
+        if not self._manual_street_width:
+            self._columns_per_row = auto_columns
+        else:
+            self._columns_per_row = max(6, min(48, self._columns_per_row))
+
     def _districts_for_view(self, snapshot: CitySnapshot) -> list[District]:
         districts = self._filtered_sorted_districts(snapshot)
         if self._focused_district_name:
@@ -265,6 +299,7 @@ class CodeSprawlApp(App):
                     district,
                     max_buildings=self._max_buildings_per_district,
                     selected=absolute_index == self._selected_district_index,
+                    columns_per_row=self._columns_per_row,
                 )
             )
 
@@ -289,6 +324,7 @@ class CodeSprawlApp(App):
                 f"Sort: {sort_mode} | Debt: {debt_filter}\n"
                 f"Districts/page: {self._districts_per_page}\n"
                 f"Density cap: {self._max_buildings_per_district} per district\n"
+                f"Street width: {self._columns_per_row} columns\n"
                 f"Show empty: {'ON' if self._show_empty_districts else 'OFF'}\n"
                 f"Repo TODOs: {snapshot.todo_count} {weather}\n"
                 f"Skipped dirs: {snapshot.scan_stats.dirs_skipped_builtin} builtin, "
@@ -298,7 +334,7 @@ class CodeSprawlApp(App):
                 f"Hidden by paging: {hidden_by_page}\n"
                 f"Scanned: {snapshot.scanned_at.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
                 "Controls: n/p page, j/k district, Enter focus, b back\n"
-                "More: s sort, d debt, e empty, [ ] density, -/= districts\n"
+                "More: s sort, d debt, e empty, [ ] density, -/= districts, ,/. streets\n"
                 "Click any building to inspect details."
             ),
         )

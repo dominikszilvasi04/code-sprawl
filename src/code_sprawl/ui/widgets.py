@@ -77,11 +77,19 @@ class BuildingWidget(Static):
 
 
 class DistrictWidget(Widget):
-    def __init__(self, district: District, *, max_buildings: int = 64, selected: bool = False) -> None:
+    def __init__(
+        self,
+        district: District,
+        *,
+        max_buildings: int = 64,
+        selected: bool = False,
+        columns_per_row: int = 22,
+    ) -> None:
         classes = "district selected-district" if selected else "district"
         super().__init__(classes=classes)
         self.district = district
         self.max_buildings = max_buildings
+        self.columns_per_row = max(6, columns_per_row)
 
     def compose(self):
         yield Label(
@@ -94,7 +102,7 @@ class DistrictWidget(Widget):
             yield Static("─" * 80, classes="district-road")
             return
 
-        per_row = 22
+        per_row = self.columns_per_row
         for idx in range(0, len(visible), per_row):
             with Horizontal(classes="district-row"):
                 for building in visible[idx : idx + per_row]:

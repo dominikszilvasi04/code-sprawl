@@ -40,8 +40,20 @@ class District:
 
 
 @dataclass(slots=True)
+class ScanStats:
+    dirs_seen: int = 0
+    dirs_skipped_builtin: int = 0
+    dirs_skipped_gitignore: int = 0
+    files_seen: int = 0
+    files_included: int = 0
+    files_skipped_gitignore: int = 0
+    files_skipped_non_text: int = 0
+
+
+@dataclass(slots=True)
 class CitySnapshot:
     root: Path
     districts: list[District]
     scanned_at: datetime
     todo_count: int = 0
+    scan_stats: ScanStats = field(default_factory=ScanStats)

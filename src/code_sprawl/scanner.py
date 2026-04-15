@@ -9,7 +9,7 @@ from pathspec import PathSpec
 from pydriller import Repository
 from radon.complexity import cc_visit
 
-from .models import Building, CitySnapshot, District
+from .models import Building, CitySnapshot, District, ScanStats
 
 _SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "__pycache__", ".pytest_cache", "dist", "build"}
 _TEXT_EXTENSIONS = {
@@ -129,7 +129,7 @@ def _collect_commit_heat(root: Path, max_commits: int = 600) -> Counter[str]:
     return heat
 
 
-def scan_repository(root_path: str | Path) -> CitySnapshot:
+def scan_repository(root_path: str | Path, *, include_empty_districts: bool = True) -> CitySnapshot:
     root = Path(root_path).resolve()
     now = datetime.now()
     commit_heat = _collect_commit_heat(root)
@@ -137,25 +137,43 @@ def scan_repository(root_path: str | Path) -> CitySnapshot:
 
     district_map: dict[str, District] = {}
     total_todos = 0
+    stats = ScanStats()
 
     for current_root, dirs, files in os.walk(root):
+        stats.dirs_seen += 1
         current_path = Path(current_root)
 
-        dirs[:] = [
-            d
-            for d in dirs
-            if d not in _SKIP_DIRS and not _is_gitignored(root, current_path / d, gitignore_spec, is_dir=True)
-        ]
+        original_dirs = list(dirs)
+        skipped_builtin = 0
+        skipped_gitignore = 0
+
+        filtered_dirs: list[str] = []
+        for d in original_dirs:
+            dir_path = current_path / d
+            if d in _SKIP_DIRS:
+                skipped_builtin += 1
+                continue
+            if _is_gitignored(root, dir_path, gitignore_spec, is_dir=True):
+                skipped_gitignore += 1
+                continue
+            filtered_dirs.append(d)
+
+        dirs[:] = filtered_dirs
+        stats.dirs_skipped_builtin += skipped_builtin
+        stats.dirs_skipped_gitignore += skipped_gitignore
 
         rel_dir = current_path.relative_to(root)
         district_key = str(rel_dir) if str(rel_dir) != "." else "root"
 
         buildings: list[Building] = []
         for file_name in files:
+            stats.files_seen += 1
             full_path = current_path / file_name
             if _is_gitignored(root, full_path, gitignore_spec):
+                stats.files_skipped_gitignore += 1
                 continue
             if not _is_text_file(full_path):
+                stats.files_skipped_non_text += 1
                 continue
 
             stat = full_path.stat()
@@ -180,10 +198,19 @@ def scan_repository(root_path: str | Path) -> CitySnapshot:
             )
             buildings.append(building)
             total_todos += todo_count
+            stats.files_included += 1
 
         if buildings:
             buildings.sort(key=lambda b: (b.loc, b.commit_count), reverse=True)
             district_map[district_key] = District(name=district_key, path=current_path, buildings=buildings)
+        elif include_empty_districts:
+            district_map[district_key] = District(name=district_key, path=current_path, buildings=[])
 
-    districts = sorted(district_map.values(), key=lambda d: len(d.buildings), reverse=True)
-    return CitySnapshot(root=root, districts=districts, scanned_at=now, todo_count=total_todos)
+    districts = sorted(district_map.values(), key=lambda d: (len(d.buildings), d.name), reverse=True)
+    return CitySnapshot(
+        root=root,
+        districts=districts,
+        scanned_at=now,
+        todo_count=total_todos,
+        scan_stats=stats,
+    )

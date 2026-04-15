@@ -69,6 +69,11 @@ Screen {
     margin-bottom: 0;
 }
 
+.district-empty {
+    color: #5f6a82;
+    height: 1;
+}
+
 .building {
     width: 3;
     margin-right: 0;
@@ -83,6 +88,10 @@ Screen {
 
 .high-debt {
     color: #ff5d7a;
+}
+
+.high-heat {
+    color: #ffb86c;
 }
 
 .ext-py {

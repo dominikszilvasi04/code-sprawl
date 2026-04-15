@@ -29,6 +29,7 @@ class CodeSprawlApp(App):
         ("b", "clear_focus", "Back to All"),
         ("s", "cycle_sort", "Sort"),
         ("d", "cycle_debt_filter", "Debt"),
+        ("x", "cycle_extension_filter", "Ext Filter"),
         ("e", "toggle_empty", "Empty Dirs"),
         ("]", "more_density", "More Buildings"),
         ("[", "less_density", "Fewer Buildings"),
@@ -50,6 +51,8 @@ class CodeSprawlApp(App):
         self._sort_index = 0
         self._debt_filters = ("all", "medium+", "high+", "critical")
         self._debt_filter_index = 0
+        self._extension_filters = ("all", "python", "web", "docs", "config")
+        self._extension_filter_index = 0
         self._selected_district_index = 0
         self._focused_district_name: str | None = None
         self._columns_per_row = 22
@@ -93,6 +96,12 @@ class CodeSprawlApp(App):
 
     def action_cycle_debt_filter(self) -> None:
         self._debt_filter_index = (self._debt_filter_index + 1) % len(self._debt_filters)
+        self._district_page = 0
+        self._selected_district_index = 0
+        self._rerender_if_loaded()
+
+    def action_cycle_extension_filter(self) -> None:
+        self._extension_filter_index = (self._extension_filter_index + 1) % len(self._extension_filters)
         self._district_page = 0
         self._selected_district_index = 0
         self._rerender_if_loaded()
@@ -247,6 +256,22 @@ class CodeSprawlApp(App):
             "critical": 3,
         }[mode]
 
+    def _matches_extension_filter(self, extension: str) -> bool:
+        mode = self._extension_filters[self._extension_filter_index]
+        ext = extension.lower()
+
+        if mode == "all":
+            return True
+        if mode == "python":
+            return ext == ".py"
+        if mode == "web":
+            return ext in {".js", ".jsx", ".ts", ".tsx", ".css", ".scss", ".html"}
+        if mode == "docs":
+            return ext in {".md", ".txt", ".rst"}
+        if mode == "config":
+            return ext in {".json", ".yaml", ".yml", ".toml", ".ini", ".cfg"}
+        return True
+
     def _filtered_sorted_districts(self, snapshot: CitySnapshot) -> list[District]:
         threshold = self._debt_threshold_rank()
         filtered_districts = []
@@ -255,7 +280,10 @@ class CodeSprawlApp(App):
 
         for district in snapshot.districts:
             buildings = [
-                b for b in district.buildings if self._debt_level_rank(b.debt_level) >= threshold
+                b
+                for b in district.buildings
+                if self._debt_level_rank(b.debt_level) >= threshold
+                and self._matches_extension_filter(b.extension)
             ]
 
             if sort_mode == "size":
@@ -312,6 +340,7 @@ class CodeSprawlApp(App):
         hidden_by_page = max(0, len(districts_all) - len(districts))
         sort_mode = self._sort_modes[self._sort_index]
         debt_filter = self._debt_filters[self._debt_filter_index]
+        extension_filter = self._extension_filters[self._extension_filter_index]
         focus_state = self._focused_district_name or "(all)"
         self._set_sidebar(
             title="Welcome to the Sprawl",
@@ -321,7 +350,7 @@ class CodeSprawlApp(App):
                 f"Visible districts: {len(districts_all)}\n"
                 f"View: page {current_page}/{total_pages} (n/p to navigate)\n"
             f"Focused district: {focus_state}\n"
-                f"Sort: {sort_mode} | Debt: {debt_filter}\n"
+                f"Sort: {sort_mode} | Debt: {debt_filter} | Ext: {extension_filter}\n"
                 f"Districts/page: {self._districts_per_page}\n"
                 f"Density cap: {self._max_buildings_per_district} per district\n"
                 f"Street width: {self._columns_per_row} columns\n"
@@ -334,7 +363,7 @@ class CodeSprawlApp(App):
                 f"Hidden by paging: {hidden_by_page}\n"
                 f"Scanned: {snapshot.scanned_at.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
                 "Controls: n/p page, j/k district, Enter focus, b back\n"
-                "More: s sort, d debt, e empty, [ ] density, -/= districts, ,/. streets\n"
+                "More: s sort, d debt, x ext, e empty, [ ] density, -/= districts, ,/. streets\n"
                 "Click any building to inspect details."
             ),
         )

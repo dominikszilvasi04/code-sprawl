@@ -42,27 +42,29 @@ class BuildingWidget(Static):
 
     def render_city_block(self) -> str:
         if self.building.debt_level == "critical":
-            body_unit = "▓▓"
-            roof = "╔╗"
+            roof = "┏┳┓"
+            body_unit = "┃X┃"
         elif self.building.debt_level == "high":
-            body_unit = "▒▒"
-            roof = "╔╗"
+            roof = "┏┯┓"
+            body_unit = "┃▓┃"
         else:
-            body_unit = "██"
-            roof = "┌┐"
+            roof = "┌┬┐"
+            if self.building.age_days <= 14:
+                body_unit = "┃█┃"
+            elif self.building.age_days <= 90:
+                body_unit = "┃▒┃"
+            else:
+                body_unit = "┃░┃"
 
         if self.building.name.startswith(("main", "app", "index")):
-            roof = "╦╦"
+            roof = "╭┬╮"
 
         body = "\n".join(body_unit for _ in range(self.building.height))
-        base = "╩╩"
+        base = "└┴┘"
 
         if self._hovered:
-            marker = "[bold cyan][][/]"
-        else:
-            marker = "[dim]..[/]"
-
-        return f"{roof}\n{body}\n{base}\n{marker}"
+            return f"[bold cyan]{roof}[/]\n{body}\n{base}"
+        return f"{roof}\n{body}\n{base}"
 
 
 class DistrictWidget(Widget):

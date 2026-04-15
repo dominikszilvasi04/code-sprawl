@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "code-sprawl"
+version = "0.1.0"
+description = "Fun neon TUI that visualizes a repository like a code city"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "You" }]
+dependencies = [
+  "textual>=0.67.0",
+  "pydriller>=2.6",
+  "radon>=6.0.1",
+  "pathspec>=0.12.1",
+]
+
+[project.scripts]
+code-sprawl = "code_sprawl.main:run"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

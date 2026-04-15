@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from textual import events
-from textual.containers import Horizontal, Vertical
+from textual.containers import Horizontal
 from textual.message import Message
 from textual.widget import Widget
 from textual.widgets import Label, Static
@@ -42,22 +42,27 @@ class BuildingWidget(Static):
 
     def render_city_block(self) -> str:
         if self.building.debt_level == "critical":
-            window = "X"
+            body_unit = "▓▓"
+            roof = "╔╗"
         elif self.building.debt_level == "high":
-            window = "▣"
+            body_unit = "▒▒"
+            roof = "╔╗"
         else:
-            window = "▤"
+            body_unit = "██"
+            roof = "┌┐"
 
-        crown = "^^" if self.building.name.startswith(("main", "app", "index")) else "┏┓"
-        body = "\n".join(f"┃{window}┃" for _ in range(self.building.height))
-        base = "┗┛"
+        if self.building.name.startswith(("main", "app", "index")):
+            roof = "╦╦"
+
+        body = "\n".join(body_unit for _ in range(self.building.height))
+        base = "╩╩"
 
         if self._hovered:
-            label = f"[bold cyan]{self.building.name[:10]}[/]"
+            marker = "[bold cyan][][/]"
         else:
-            label = f"[dim]{self.building.extension}[/]"
+            marker = "[dim]..[/]"
 
-        return f"{crown}\n{body}\n{base}\n{label}"
+        return f"{roof}\n{body}\n{base}\n{marker}"
 
 
 class DistrictWidget(Widget):
@@ -66,7 +71,14 @@ class DistrictWidget(Widget):
         self.district = district
 
     def compose(self):
-        yield Label(f"◼ {self.district.name}", classes="district-title")
-        with Horizontal(classes="district-row"):
-            for building in self.district.buildings[:24]:
-                yield BuildingWidget(building)
+        yield Label(
+            f"{self.district.name}  [{len(self.district.buildings)} files]",
+            classes="district-title",
+        )
+        visible = self.district.buildings[:64]
+        per_row = 22
+        for idx in range(0, len(visible), per_row):
+            with Horizontal(classes="district-row"):
+                for building in visible[idx : idx + per_row]:
+                    yield BuildingWidget(building)
+        yield Static("─" * 80, classes="district-road")

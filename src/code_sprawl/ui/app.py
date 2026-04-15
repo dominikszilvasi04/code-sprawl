@@ -4,7 +4,7 @@ import asyncio
 from pathlib import Path
 
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.containers import Horizontal, Vertical
 from textual.widgets import Footer, Header, Label, Static
 
 from ..models import Building, CitySnapshot
@@ -16,17 +16,25 @@ class CodeSprawlApp(App):
     CSS_PATH = "styles.tcss"
     TITLE = "Code-Sprawl"
     SUB_TITLE = "Neon repo skyline"
-    BINDINGS = [("q", "quit", "Quit"), ("r", "reload", "Rescan")]
+    BINDINGS = [
+        ("q", "quit", "Quit"),
+        ("r", "reload", "Rescan"),
+        ("n", "next_page", "Next Districts"),
+        ("p", "prev_page", "Prev Districts"),
+    ]
 
     def __init__(self, repo_path: Path) -> None:
         super().__init__()
         self.repo_path = repo_path
+        self._snapshot: CitySnapshot | None = None
+        self._district_page = 0
+        self._districts_per_page = 6
 
     def compose(self) -> ComposeResult:
         yield Header()
         yield Label("Code-Sprawl // scan your repo, hunt debt, vibe in neon", id="banner")
         with Horizontal(id="main-layout"):
-            yield VerticalScroll(id="city-pane")
+            yield Vertical(id="city-pane")
             yield Static(id="sidebar")
         with Vertical(id="timeline-panel"):
             yield Label("Time Travel (preview mode)", id="timeline-title")
@@ -35,38 +43,60 @@ class CodeSprawlApp(App):
 
     def on_mount(self) -> None:
         self._set_sidebar("Scanning...", "Warming up the neon skyline. Please wait.")
-        city_pane = self.query_one("#city-pane", VerticalScroll)
+        city_pane = self.query_one("#city-pane", Vertical)
         city_pane.remove_children()
         city_pane.mount(Static("[cyan]Scanning repository...[/]"))
         self.run_worker(self._load_city_async(), exclusive=True)
 
     def action_reload(self) -> None:
         self._set_sidebar("Rescanning...", "Rebuilding districts and recalculating debt.")
-        city_pane = self.query_one("#city-pane", VerticalScroll)
+        city_pane = self.query_one("#city-pane", Vertical)
         city_pane.remove_children()
         city_pane.mount(Static("[cyan]Rescanning repository...[/]"))
         self.run_worker(self._load_city_async(), exclusive=True)
 
+    def action_next_page(self) -> None:
+        if self._snapshot is None:
+            return
+        max_page = max(0, (len(self._snapshot.districts) - 1) // self._districts_per_page)
+        self._district_page = min(max_page, self._district_page + 1)
+        self._render_snapshot(self._snapshot)
+
+    def action_prev_page(self) -> None:
+        if self._snapshot is None:
+            return
+        self._district_page = max(0, self._district_page - 1)
+        self._render_snapshot(self._snapshot)
+
     async def _load_city_async(self) -> None:
         snapshot = await asyncio.to_thread(scan_repository, self.repo_path)
+        self._snapshot = snapshot
+        self._district_page = 0
         self._render_snapshot(snapshot)
 
     def _render_snapshot(self, snapshot: CitySnapshot) -> None:
-        city_pane = self.query_one("#city-pane", VerticalScroll)
+        city_pane = self.query_one("#city-pane", Vertical)
         city_pane.remove_children()
 
-        for district in snapshot.districts:
+        start = self._district_page * self._districts_per_page
+        end = start + self._districts_per_page
+        districts = snapshot.districts[start:end]
+
+        for district in districts:
             city_pane.mount(DistrictWidget(district))
 
         if not snapshot.districts:
             city_pane.mount(Static("[yellow]No scannable text files found in this path.[/]"))
 
         weather = "CLOUDY" if snapshot.todo_count >= 25 else "CLEAR"
+        current_page = self._district_page + 1
+        total_pages = max(1, (len(snapshot.districts) + self._districts_per_page - 1) // self._districts_per_page)
         self._set_sidebar(
             title="Welcome to the Sprawl",
             body=(
                 f"Root: {snapshot.root}\n"
                 f"Districts: {len(snapshot.districts)}\n"
+                f"View: page {current_page}/{total_pages} (n/p to navigate)\n"
                 f"Repo TODOs: {snapshot.todo_count} {weather}\n"
                 f"Scanned: {snapshot.scanned_at.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
                 "Click any building to inspect details."

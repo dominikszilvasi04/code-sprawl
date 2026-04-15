@@ -5,8 +5,8 @@ Screen {
 
 #banner {
     dock: top;
-    height: 3;
-    padding: 1 2;
+    height: 2;
+    padding: 0 1;
     color: #00f5ff;
     text-style: bold;
     background: #0b1020;
@@ -19,21 +19,22 @@ Screen {
 
 #city-pane {
     width: 1fr;
-    padding: 1 2;
+    padding: 0 1;
+    overflow: hidden;
 }
 
 #sidebar {
-    width: 38;
+    width: 34;
     border-left: heavy #ff00aa;
-    padding: 1 2;
+    padding: 1 1;
     background: #0f0611;
     color: #ffd6f2;
 }
 
 #timeline-panel {
     dock: bottom;
-    height: 4;
-    padding: 0 2;
+    height: 3;
+    padding: 0 1;
     border-top: heavy #00f5ff;
     background: #071018;
 }
@@ -44,24 +45,33 @@ Screen {
 
 .district {
     margin-bottom: 1;
-    border: round #2b395a;
-    padding: 0 1 1 1;
+    border: none;
+    padding: 0 0 0 0;
     background: #070b16;
 }
 
 .district-title {
     color: #8bd3ff;
     text-style: bold;
-    margin-bottom: 1;
+    margin-bottom: 0;
+    height: 1;
 }
 
 .district-row {
     height: auto;
+    align-vertical: bottom;
+    margin-bottom: 0;
+}
+
+.district-road {
+    color: #2b395a;
+    height: 1;
+    margin-bottom: 0;
 }
 
 .building {
-    width: 8;
-    margin-right: 1;
+    width: 3;
+    margin-right: 0;
     content-align: center bottom;
     color: #8ed8ff;
 }

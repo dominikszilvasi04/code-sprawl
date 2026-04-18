@@ -1,6 +1,17 @@
 # Code-Sprawl
 
-A fun neon Terminal UI that turns a local repository into a tiny "living city".
+A fun neon Terminal UI that turns a local repository into an interactive 2D world.
+
+## Highlights
+- Full-screen world viewport with animated folder "blobs"
+- Free camera pan and zoom controls
+- Folder drill-down navigation and scope backtracking
+- File and folder inspector with repo metrics
+- Minimap for spatial orientation
+
+## Requirements
+- Python 3.10+
+- Git repository (local)
 
 ## What it shows
 - Folders as districts
@@ -19,6 +30,40 @@ A fun neon Terminal UI that turns a local repository into a tiny "living city".
 4. Run against another repo:
    - `code-sprawl C:/path/to/repo`
 
+## Development setup
+Install development dependencies:
+
+- `python -m pip install -e .[dev]`
+
+Enable pre-commit hooks:
+
+- `pre-commit install`
+
+Local quality checks:
+
+- `ruff check .`
+- `black --check .`
+- `mypy`
+- `pytest`
+
+Convenience commands:
+
+- `make check` (lint + format-check + type-check + tests)
+- `make all` (check + security audit + build + package checks)
+
+## CI/CD pipelines
+GitHub Actions workflows are included for full automation:
+
+- `CI` workflow: linting, formatting checks, type checks, test matrix, coverage artifact, package build validation
+- `CodeQL` workflow: static security analysis for Python
+- `Release` workflow: build + publish on tags matching `v*` (requires `PYPI_API_TOKEN` secret)
+
+Workflow files:
+
+- `.github/workflows/ci.yml`
+- `.github/workflows/codeql.yml`
+- `.github/workflows/release.yml`
+
 ## Controls
 - Arrow keys pan camera
 - `Ctrl+Up` / `Ctrl+Down` or `+` / `-` zoom
@@ -32,40 +77,3 @@ A fun neon Terminal UI that turns a local repository into a tiny "living city".
 - Animated traffic between hot files
 - GitHub Actions district health
 - Debt monster mini-game
-
-## Quality gates (CI/CD)
-
-This project includes full GitHub Actions automation:
-
-- CI workflow: linting, formatting checks, type checking, test matrix, coverage artifact, packaging validation
-- Security workflow: dependency vulnerability audit (`pip-audit`) and CodeQL static analysis
-- Release workflow: build + publish on version tags (`v*`) using `PYPI_API_TOKEN`
-
-Workflows live in [.github/workflows/ci.yml](.github/workflows/ci.yml), [.github/workflows/codeql.yml](.github/workflows/codeql.yml), and [.github/workflows/release.yml](.github/workflows/release.yml).
-
-## Local QA commands
-
-Install development tooling:
-
-- `python -m pip install -e .[dev]`
-
-Run checks manually:
-
-- `ruff check .`
-- `black --check .`
-- `mypy`
-- `pytest`
-- `pip-audit`
-
-Or use the Makefile:
-
-- `make check` (lint + format + types + tests)
-- `make all` (check + security + build + package validation)
-
-## Pre-commit hooks
-
-Enable hooks locally:
-
-- `pre-commit install`
-
-Config is in [.pre-commit-config.yaml](.pre-commit-config.yaml).

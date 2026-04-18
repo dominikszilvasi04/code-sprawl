@@ -302,11 +302,74 @@ def _layout_world_nodes(scope: Path, nodes: list[WorldNode]) -> list[WorldNode]:
             )
         )
 
+    # Relax overlaps (soft-body repulsion) so blobs don't stack on top of each other.
+    for _ in range(22):
+        moved = False
+        for i in range(len(positioned)):
+            a = positioned[i]
+            for j in range(i + 1, len(positioned)):
+                b = positioned[j]
+                dx = b.x - a.x
+                dy = b.y - a.y
+                dist = sqrt(dx * dx + dy * dy)
+
+                min_dist = (a.radius + b.radius) * 1.45
+                if dist >= min_dist:
+                    continue
+
+                if dist < 1e-6:
+                    dx, dy, dist = 0.001, 0.001, 0.0015
+
+                overlap = min_dist - dist
+                push = overlap * 0.50
+                nx = dx / dist
+                ny = dy / dist
+
+                weight_a = max(0.65, 1.0 - (a.radius / 12.0))
+                weight_b = max(0.65, 1.0 - (b.radius / 12.0))
+
+                positioned[i] = WorldNode(
+                    id=a.id,
+                    name=a.name,
+                    path=a.path,
+                    is_dir=a.is_dir,
+                    x=a.x - nx * push * weight_a,
+                    y=a.y - ny * push * weight_a,
+                    radius=a.radius,
+                    extension=a.extension,
+                    loc=a.loc,
+                    age_days=a.age_days,
+                    commit_count=a.commit_count,
+                    complexity=a.complexity,
+                    todo_count=a.todo_count,
+                    child_count=a.child_count,
+                )
+                positioned[j] = WorldNode(
+                    id=b.id,
+                    name=b.name,
+                    path=b.path,
+                    is_dir=b.is_dir,
+                    x=b.x + nx * push * weight_b,
+                    y=b.y + ny * push * weight_b,
+                    radius=b.radius,
+                    extension=b.extension,
+                    loc=b.loc,
+                    age_days=b.age_days,
+                    commit_count=b.commit_count,
+                    complexity=b.complexity,
+                    todo_count=b.todo_count,
+                    child_count=b.child_count,
+                )
+                moved = True
+
+        if not moved:
+            break
+
     max_extent = 1.0
     for node in positioned:
         max_extent = max(max_extent, abs(node.x) + node.radius, abs(node.y) + node.radius)
 
-    target_extent = max(18.0, min(42.0, 10.0 + sqrt(count) * 2.2))
+    target_extent = max(22.0, min(52.0, 14.0 + sqrt(count) * 2.6))
     scale = target_extent / max_extent
     radius_scale = min(1.05, max(0.72, scale))
 

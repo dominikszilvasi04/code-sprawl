@@ -20,9 +20,12 @@ A fun neon Terminal UI that turns a local repository into a tiny "living city".
    - `code-sprawl C:/path/to/repo`
 
 ## Controls
-- Mouse hover over a building for glow effect
-- Click a building to open details in the sidebar
-- `q` to quit
+- Arrow keys pan camera
+- `Ctrl+Up` / `Ctrl+Down` or `+` / `-` zoom
+- Click a blob/file to select, double-click or `Enter` to drill/open
+- `b` to go back one folder scope
+- `f` to fit world, `c` to center camera
+- `r` to rescan, `q` to quit
 
 ## Next upgrades
 - True commit timeline time-travel slider

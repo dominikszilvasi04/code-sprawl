@@ -65,12 +65,31 @@ Workflow files:
 - `.github/workflows/release.yml`
 
 ## Controls
-- Arrow keys pan camera
-- `Ctrl+Up` / `Ctrl+Down` or `+` / `-` zoom
-- Click a blob/file to select, double-click or `Enter` to drill/open
-- `b` to go back one folder scope
-- `f` to fit world, `c` to center camera
-- `r` to rescan, `q` to quit
+| Action | Keys |
+|---|---|
+| Pan camera | Arrow keys |
+| Zoom | `Ctrl+Up` / `Ctrl+Down` or `+` / `-` |
+| Select next / previous node | `Tab` / `Shift+Tab` |
+| Snap camera to selected node | `g` |
+| Drill into folder / open file details | `Enter` |
+| Go back one folder scope | `b` |
+| Fit world bounds | `f` |
+| Center camera | `c` |
+| Rescan current scope | `r` |
+| Quit | `q` |
+
+Mouse:
+
+- Single click: select node
+- Double click: drill/open selected node
+
+## Troubleshooting
+- If the world looks sparse after switching scope, press `f` to fit the camera.
+- If `code-sprawl` is not found in PowerShell, run:
+   - `python -m code_sprawl.main`
+- If dependencies changed, reinstall editable package:
+   - `python -m pip install -e .[dev]`
+- For large repos, keep default zoom and use minimap + `Tab`/`Shift+Tab` navigation.
 
 ## Next upgrades
 - True commit timeline time-travel slider

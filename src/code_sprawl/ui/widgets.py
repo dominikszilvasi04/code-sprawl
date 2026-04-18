@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from math import sqrt
 
+from rich.text import Text
 from textual import events
 from textual.message import Message
 from textual.widgets import Static
@@ -102,6 +103,7 @@ class WorldViewport(Static):
         height = max(8, self.size.height)
 
         buffer = [[" " for _ in range(width)] for _ in range(height)]
+        label_spans: list[tuple[int, int, int, str]] = []
 
         if self.scope is None:
             return "Loading world..."
@@ -120,7 +122,7 @@ class WorldViewport(Static):
                 continue
 
             if node.is_dir:
-                self._draw_blob(buffer, node, sx, sy, radius)
+                self._draw_blob(buffer, node, sx, sy, radius, label_spans)
             else:
                 self._draw_file_node(buffer, node, sx, sy)
 
@@ -132,9 +134,30 @@ class WorldViewport(Static):
         if 0 <= cx < width and 0 <= cy < height:
             buffer[cy][cx] = "+"
 
-        return "\n".join("".join(row) for row in buffer)
+        raw = "\n".join("".join(row) for row in buffer)
+        text = Text(raw)
 
-    def _draw_blob(self, buffer: list[list[str]], node: WorldNode, sx: int, sy: int, radius: int) -> None:
+        for line, start, end, style in label_spans:
+            if line < 0 or line >= height:
+                continue
+            clamped_start = max(0, min(width, start))
+            clamped_end = max(clamped_start, min(width, end))
+            if clamped_start == clamped_end:
+                continue
+            offset = (line * (width + 1)) + clamped_start
+            text.stylize(style, offset, offset + (clamped_end - clamped_start))
+
+        return text
+
+    def _draw_blob(
+        self,
+        buffer: list[list[str]],
+        node: WorldNode,
+        sx: int,
+        sy: int,
+        radius: int,
+        label_spans: list[tuple[int, int, int, str]],
+    ) -> None:
         height = len(buffer)
         width = len(buffer[0]) if buffer else 0
 
@@ -176,7 +199,7 @@ class WorldViewport(Static):
             pulse = core_char if self._phase % 2 == 0 else "+"
             buffer[sy][sx] = pulse
 
-        self._draw_inner_label(buffer, sx, sy, radius, node.name)
+        self._draw_inner_label(buffer, sx, sy, radius, node.name, node, label_spans)
 
     def _draw_file_node(self, buffer: list[list[str]], node: WorldNode, sx: int, sy: int) -> None:
         height = len(buffer)
@@ -194,7 +217,16 @@ class WorldViewport(Static):
         buffer[sy - 1][sx] = "^"
         buffer[sy + 1][sx] = "v"
 
-    def _draw_inner_label(self, buffer: list[list[str]], sx: int, sy: int, radius: int, text: str) -> None:
+    def _draw_inner_label(
+        self,
+        buffer: list[list[str]],
+        sx: int,
+        sy: int,
+        radius: int,
+        text: str,
+        node: WorldNode,
+        label_spans: list[tuple[int, int, int, str]],
+    ) -> None:
         if sy < 0 or sy >= len(buffer):
             return
 
@@ -214,10 +246,18 @@ class WorldViewport(Static):
             token = short[:2]
             start = sx - len(token) // 2
 
+        style = "bold cyan"
+        if node.debt_level == "critical":
+            style = "bold magenta"
+        elif node.debt_level == "high":
+            style = "bold yellow"
+
         for i, ch in enumerate(token):
             x = start + i
             if 0 <= x < width:
                 buffer[sy][x] = ch
+
+        label_spans.append((sy, start, start + len(token), style))
 
     def _draw_selection_ring(self, buffer: list[list[str]], sx: int, sy: int, radius: int) -> None:
         height = len(buffer)

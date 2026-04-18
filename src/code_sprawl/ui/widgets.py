@@ -121,7 +121,6 @@ class WorldViewport(Static):
 
             if node.is_dir:
                 self._draw_blob(buffer, node, sx, sy, radius)
-                self._draw_label(buffer, sx, sy + radius + 1, node.name)
             else:
                 self._draw_file_node(buffer, node, sx, sy)
 
@@ -177,6 +176,8 @@ class WorldViewport(Static):
             pulse = core_char if self._phase % 2 == 0 else "+"
             buffer[sy][sx] = pulse
 
+        self._draw_inner_label(buffer, sx, sy, radius, node.name)
+
     def _draw_file_node(self, buffer: list[list[str]], node: WorldNode, sx: int, sy: int) -> None:
         height = len(buffer)
         width = len(buffer[0]) if buffer else 0
@@ -193,14 +194,27 @@ class WorldViewport(Static):
         buffer[sy - 1][sx] = "^"
         buffer[sy + 1][sx] = "v"
 
-    def _draw_label(self, buffer: list[list[str]], sx: int, sy: int, text: str) -> None:
+    def _draw_inner_label(self, buffer: list[list[str]], sx: int, sy: int, radius: int, text: str) -> None:
         if sy < 0 or sy >= len(buffer):
             return
-        width = len(buffer[sy])
 
-        label = text if len(text) <= 14 else f"{text[:11]}..."
-        start = sx - len(label) // 2
-        for i, ch in enumerate(label):
+        width = len(buffer[sy])
+        base = text.strip()
+        if not base:
+            return
+
+        short = base[: max(2, min(6, int(radius * 1.4)))].upper()
+        token = f"[{short}]"
+
+        start = sx - len(token) // 2
+        if start < 0 or (start + len(token)) >= width:
+            return
+
+        if radius < 2:
+            token = short[:2]
+            start = sx - len(token) // 2
+
+        for i, ch in enumerate(token):
             x = start + i
             if 0 <= x < width:
                 buffer[sy][x] = ch

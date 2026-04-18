@@ -131,10 +131,15 @@ class CodeSprawlApp(App):
         else:
             self._set_inspector("World", "No node selected")
 
+        zoom_ratio = (self._zoom - 0.45) / (3.4 - 0.45)
+        zoom_ratio = max(0.0, min(1.0, zoom_ratio))
+        filled = int(zoom_ratio * 10)
+        zoom_bar = "[" + ("#" * filled) + ("-" * (10 - filled)) + "]"
+
         self._set_hud(
             f"scope={self.current_scope.relative_to(self.repo_root) if self.current_scope != self.repo_root else '.'}  "
-            f"zoom={self._zoom:.2f}  nodes={len(self._world.nodes)}  "
-            "controls: arrows pan | ctrl+up/down zoom | enter drill/open | b back | c center"
+            f"zoom={self._zoom:.2f}{zoom_bar}  nodes={len(self._world.nodes)}  "
+            "controls: arrows pan | ctrl+up/down zoom | tab cycle | g snap | enter drill | b back | f fit"
         )
         self._render_minimap()
 

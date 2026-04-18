@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from math import sqrt
 from pathlib import Path
 
 from textual.app import App, ComposeResult
@@ -30,6 +31,7 @@ class CodeSprawlApp(App):
         ("enter", "drill_or_open", "Drill/Open"),
         ("b", "go_back_scope", "Back Scope"),
         ("c", "center_camera", "Center"),
+        ("f", "fit_world", "Fit World"),
     ]
 
     def __init__(self, repo_path: Path) -> None:
@@ -78,7 +80,36 @@ class CodeSprawlApp(App):
         else:
             self._selected_id = None
 
+        self._fit_camera_to_world()
+
         self._render_world()
+
+    def _fit_camera_to_world(self) -> None:
+        if self._world is None or not self._world.nodes:
+            self._camera_x = 0.0
+            self._camera_y = 0.0
+            self._zoom = 1.0
+            return
+
+        min_x = min(n.x - n.radius for n in self._world.nodes)
+        max_x = max(n.x + n.radius for n in self._world.nodes)
+        min_y = min(n.y - n.radius for n in self._world.nodes)
+        max_y = max(n.y + n.radius for n in self._world.nodes)
+
+        self._camera_x = (min_x + max_x) / 2
+        self._camera_y = (min_y + max_y) / 2
+
+        viewport = self.query_one(WorldViewport)
+        width = max(24, viewport.size.width)
+        height = max(12, viewport.size.height)
+
+        span_x = max(12.0, max_x - min_x)
+        span_y = max(8.0, max_y - min_y)
+
+        fit_zoom = min((width - 6) / span_x, (height - 4) / span_y)
+        density = sqrt(len(self._world.nodes))
+        fit_zoom *= max(0.7, min(1.15, 10.0 / max(4.0, density)))
+        self._zoom = max(0.55, min(2.4, fit_zoom))
 
     def _render_world(self) -> None:
         viewport = self.query_one(WorldViewport)
@@ -164,6 +195,10 @@ class CodeSprawlApp(App):
     def action_center_camera(self) -> None:
         self._camera_x = 0.0
         self._camera_y = 0.0
+        self._render_world()
+
+    def action_fit_world(self) -> None:
+        self._fit_camera_to_world()
         self._render_world()
 
     def action_drill_or_open(self) -> None:

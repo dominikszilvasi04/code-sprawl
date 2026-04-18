@@ -140,14 +140,20 @@ class WorldViewport(Static):
         width = len(buffer[0]) if buffer else 0
 
         if node.debt_level == "critical":
-            chars = ["#", "@", "%"]
+            fill_char = "#"
+            edge_char = "@"
+            core_char = "X"
         elif node.debt_level == "high":
-            chars = ["&", "#", "%"]
+            fill_char = "&"
+            edge_char = "%"
+            core_char = "H"
         else:
-            chars = ["o", "O", "0"]
+            fill_char = "o"
+            edge_char = "O"
+            core_char = "D"
 
         if node.commit_count >= 20:
-            chars = ["*", chars[1], chars[2]]
+            fill_char = "*"
 
         for dy in range(-radius - 1, radius + 2):
             py = sy + dy
@@ -159,11 +165,17 @@ class WorldViewport(Static):
                     continue
 
                 dist = sqrt((dx * 0.9) ** 2 + (dy * 1.15) ** 2)
-                edge_noise = ((hash((node.id, dx, dy, self._phase)) % 100) / 100.0 - 0.5) * 0.85
+                edge_noise = ((hash((node.id, dx, dy, self._phase)) % 100) / 100.0 - 0.5) * 0.35
                 limit = radius + edge_noise
                 if dist <= limit:
-                    idx = int((dist + self._phase) % len(chars))
-                    buffer[py][px] = chars[idx]
+                    if abs(dist - radius) <= 0.8:
+                        buffer[py][px] = edge_char
+                    else:
+                        buffer[py][px] = fill_char
+
+        if 0 <= sx < width and 0 <= sy < height:
+            pulse = core_char if self._phase % 2 == 0 else "+"
+            buffer[sy][sx] = pulse
 
     def _draw_file_node(self, buffer: list[list[str]], node: WorldNode, sx: int, sy: int) -> None:
         height = len(buffer)

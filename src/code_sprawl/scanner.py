@@ -272,12 +272,12 @@ def _layout_world_nodes(scope: Path, nodes: list[WorldNode]) -> list[WorldNode]:
 
     positioned: list[WorldNode] = []
     count = len(nodes)
-    base_ring = max(10.0, sqrt(count) * 5.0)
+    base_ring = max(8.0, sqrt(count) * 2.8)
 
     for index, node in enumerate(sorted(nodes, key=lambda n: (not n.is_dir, -n.radius, n.name.lower()))):
         seed = _hash_unit(f"{scope.as_posix()}::{node.path.as_posix()}")
         angle = ((index / max(1, count)) * (2 * pi)) + (seed * 0.45)
-        ring = base_ring + (index // 12) * 8.0 + (seed * 2.0)
+        ring = base_ring + (index // 14) * 4.0 + (seed * 1.25)
         wobble = (_hash_unit(node.id + "w") - 0.5) * 3.5
 
         x = cos(angle) * (ring + wobble)
@@ -302,7 +302,36 @@ def _layout_world_nodes(scope: Path, nodes: list[WorldNode]) -> list[WorldNode]:
             )
         )
 
-    return positioned
+    max_extent = 1.0
+    for node in positioned:
+        max_extent = max(max_extent, abs(node.x) + node.radius, abs(node.y) + node.radius)
+
+    target_extent = max(18.0, min(42.0, 10.0 + sqrt(count) * 2.2))
+    scale = target_extent / max_extent
+    radius_scale = min(1.05, max(0.72, scale))
+
+    normalized: list[WorldNode] = []
+    for node in positioned:
+        normalized.append(
+            WorldNode(
+                id=node.id,
+                name=node.name,
+                path=node.path,
+                is_dir=node.is_dir,
+                x=node.x * scale,
+                y=node.y * scale,
+                radius=max(1.0, node.radius * radius_scale),
+                extension=node.extension,
+                loc=node.loc,
+                age_days=node.age_days,
+                commit_count=node.commit_count,
+                complexity=node.complexity,
+                todo_count=node.todo_count,
+                child_count=node.child_count,
+            )
+        )
+
+    return normalized
 
 
 def scan_world_scope(

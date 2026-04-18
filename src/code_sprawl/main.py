@@ -8,7 +8,9 @@ from .ui.app import CodeSprawlApp
 
 def run() -> None:
     parser = argparse.ArgumentParser(description="Visualize a repository as a neon code sprawl")
-    parser.add_argument("path", nargs="?", default=".", help="Repository path (default: current directory)")
+    parser.add_argument(
+        "path", nargs="?", default=".", help="Repository path (default: current directory)"
+    )
     args = parser.parse_args()
 
     repo_path = Path(args.path).expanduser().resolve()

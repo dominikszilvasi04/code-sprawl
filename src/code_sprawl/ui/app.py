@@ -51,7 +51,10 @@ class CodeSprawlApp(App):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        yield Label("CODE-SPRAWL // WORLD MODE // arrows pan // ctrl+up/down zoom // enter drill", id="banner")
+        yield Label(
+            "CODE-SPRAWL // WORLD MODE // arrows pan // ctrl+up/down zoom // enter drill",
+            id="banner",
+        )
         with Horizontal(id="main-layout"):
             yield WorldViewport()
             with Vertical(id="right-panel"):

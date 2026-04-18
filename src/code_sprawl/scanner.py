@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import os
-from hashlib import sha1
-from math import cos, pi, sin, sqrt
 from collections import Counter
 from datetime import datetime
+from hashlib import sha1
+from math import cos, pi, sin, sqrt
 from pathlib import Path
 
 from pathspec import PathSpec
@@ -13,10 +13,36 @@ from radon.complexity import cc_visit
 
 from .models import Building, CitySnapshot, District, ScanStats, WorldNode, WorldScope
 
-_SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "__pycache__", ".pytest_cache", "dist", "build"}
+_SKIP_DIRS = {
+    ".git",
+    ".venv",
+    "venv",
+    "node_modules",
+    "__pycache__",
+    ".pytest_cache",
+    "dist",
+    "build",
+}
 _TEXT_EXTENSIONS = {
-    ".py", ".md", ".txt", ".json", ".yaml", ".yml", ".toml", ".ini", ".cfg",
-    ".js", ".ts", ".tsx", ".jsx", ".html", ".css", ".scss", ".sql", ".sh", ".ps1",
+    ".py",
+    ".md",
+    ".txt",
+    ".json",
+    ".yaml",
+    ".yml",
+    ".toml",
+    ".ini",
+    ".cfg",
+    ".js",
+    ".ts",
+    ".tsx",
+    ".jsx",
+    ".html",
+    ".css",
+    ".scss",
+    ".sql",
+    ".sh",
+    ".ps1",
 }
 
 
@@ -61,7 +87,7 @@ def _load_gitignore_spec(root: Path) -> PathSpec | None:
     if not patterns:
         return None
 
-    return PathSpec.from_lines("gitwildmatch", patterns)
+    return PathSpec.from_lines("gitignore", patterns)
 
 
 def _is_gitignored(root: Path, path: Path, spec: PathSpec | None, *, is_dir: bool = False) -> bool:
@@ -204,11 +230,17 @@ def scan_repository(root_path: str | Path, *, include_empty_districts: bool = Tr
 
         if buildings:
             buildings.sort(key=lambda b: (b.loc, b.commit_count), reverse=True)
-            district_map[district_key] = District(name=district_key, path=current_path, buildings=buildings)
+            district_map[district_key] = District(
+                name=district_key, path=current_path, buildings=buildings
+            )
         elif include_empty_districts:
-            district_map[district_key] = District(name=district_key, path=current_path, buildings=[])
+            district_map[district_key] = District(
+                name=district_key, path=current_path, buildings=[]
+            )
 
-    districts = sorted(district_map.values(), key=lambda d: (len(d.buildings), d.name), reverse=True)
+    districts = sorted(
+        district_map.values(), key=lambda d: (len(d.buildings), d.name), reverse=True
+    )
     return CitySnapshot(
         root=root,
         districts=districts,
@@ -243,7 +275,8 @@ def _aggregate_directory_metrics(
         dirs[:] = [
             d
             for d in dirs
-            if d not in _SKIP_DIRS and not _is_gitignored(root, current / d, gitignore_spec, is_dir=True)
+            if d not in _SKIP_DIRS
+            and not _is_gitignored(root, current / d, gitignore_spec, is_dir=True)
         ]
 
         for file_name in files:
@@ -274,7 +307,9 @@ def _layout_world_nodes(scope: Path, nodes: list[WorldNode]) -> list[WorldNode]:
     count = len(nodes)
     base_ring = max(8.0, sqrt(count) * 2.8)
 
-    for index, node in enumerate(sorted(nodes, key=lambda n: (not n.is_dir, -n.radius, n.name.lower()))):
+    for index, node in enumerate(
+        sorted(nodes, key=lambda n: (not n.is_dir, -n.radius, n.name.lower()))
+    ):
         seed = _hash_unit(f"{scope.as_posix()}::{node.path.as_posix()}")
         angle = ((index / max(1, count)) * (2 * pi)) + (seed * 0.45)
         ring = base_ring + (index // 14) * 4.0 + (seed * 1.25)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from math import sqrt
 
+from rich.console import RenderableType
 from rich.text import Text
 from textual import events
 from textual.message import Message
@@ -31,9 +32,9 @@ class WorldViewport(Static):
         self._phase = 0
 
     def on_mount(self) -> None:
-        self.set_interval(0.28, self._animate)
+        self.set_interval(0.28, self._tick)
 
-    def _animate(self) -> None:
+    def _tick(self) -> None:
         self._phase = (self._phase + 1) % 6
         self.refresh(layout=False)
 
@@ -98,7 +99,7 @@ class WorldViewport(Static):
         if already_selected and event.chain >= 2:
             self.post_message(self.NodeActivated(node))
 
-    def render(self) -> str:
+    def render(self) -> RenderableType:
         width = max(16, self.size.width)
         height = max(8, self.size.height)
 
@@ -118,7 +119,12 @@ class WorldViewport(Static):
         for node in nodes:
             sx, sy, radius = self._to_screen(node, width, height)
 
-            if sx < -radius - 20 or sx > width + radius + 20 or sy < -radius - 5 or sy > height + radius + 5:
+            if (
+                sx < -radius - 20
+                or sx > width + radius + 20
+                or sy < -radius - 5
+                or sy > height + radius + 5
+            ):
                 continue
 
             if node.is_dir:

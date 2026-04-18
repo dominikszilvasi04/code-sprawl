@@ -32,3 +32,40 @@ A fun neon Terminal UI that turns a local repository into a tiny "living city".
 - Animated traffic between hot files
 - GitHub Actions district health
 - Debt monster mini-game
+
+## Quality gates (CI/CD)
+
+This project includes full GitHub Actions automation:
+
+- CI workflow: linting, formatting checks, type checking, test matrix, coverage artifact, packaging validation
+- Security workflow: dependency vulnerability audit (`pip-audit`) and CodeQL static analysis
+- Release workflow: build + publish on version tags (`v*`) using `PYPI_API_TOKEN`
+
+Workflows live in [.github/workflows/ci.yml](.github/workflows/ci.yml), [.github/workflows/codeql.yml](.github/workflows/codeql.yml), and [.github/workflows/release.yml](.github/workflows/release.yml).
+
+## Local QA commands
+
+Install development tooling:
+
+- `python -m pip install -e .[dev]`
+
+Run checks manually:
+
+- `ruff check .`
+- `black --check .`
+- `mypy`
+- `pytest`
+- `pip-audit`
+
+Or use the Makefile:
+
+- `make check` (lint + format + types + tests)
+- `make all` (check + security + build + package validation)
+
+## Pre-commit hooks
+
+Enable hooks locally:
+
+- `pre-commit install`
+
+Config is in [.pre-commit-config.yaml](.pre-commit-config.yaml).

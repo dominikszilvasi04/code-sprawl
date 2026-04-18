@@ -1,125 +1,44 @@
 Screen {
-    background: #040407;
+    background: #020307;
     color: #d8f7ff;
 }
 
 #banner {
     dock: top;
-    height: 2;
-    padding: 0 1;
-    color: #00f5ff;
-    text-style: bold;
-    background: #0b1020;
-    border-bottom: heavy #00f5ff;
-}
-
-#district-strip {
-    dock: top;
     height: 1;
     padding: 0 1;
-    background: #06111f;
-    color: #7fe9ff;
-    border-bottom: solid #1a3652;
+    color: #9be7ff;
+    text-style: bold;
+    background: #08101d;
+    border-bottom: solid #1e3e5b;
 }
 
 #main-layout {
     height: 1fr;
 }
 
-#city-pane {
+#world-view {
     width: 1fr;
-    padding: 0 1;
-    overflow: hidden;
-}
-
-#sidebar {
-    width: 34;
-    border-left: heavy #ff00aa;
     padding: 1 1;
-    background: #0f0611;
-    color: #ffd6f2;
+    overflow: hidden;
+    background: #04070f;
+    border: heavy #00c2ff;
+    color: #9cf0ff;
 }
 
-#timeline-panel {
+#inspector {
+    width: 42;
+    border-left: heavy #ff2fcf;
+    padding: 1 1;
+    background: #0b0612;
+    color: #ffd7f4;
+}
+
+#hud {
     dock: bottom;
-    height: 3;
+    height: 1;
     padding: 0 1;
-    border-top: heavy #00f5ff;
-    background: #071018;
-}
-
-#timeline-title {
-    color: #9de8ff;
-}
-
-.district {
-    margin-bottom: 1;
-    border: none;
-    padding: 0 0 0 0;
-    background: #070b16;
-}
-
-.selected-district {
-    border-left: heavy #00f5ff;
-    padding-left: 1;
-}
-
-.district-title {
-    color: #8bd3ff;
-    text-style: bold;
-    margin-bottom: 0;
-    height: 1;
-}
-
-.district-row {
-    height: auto;
-    align-vertical: bottom;
-    margin-bottom: 0;
-}
-
-.district-road {
-    color: #2b395a;
-    height: 1;
-    margin-bottom: 0;
-}
-
-.district-empty {
-    color: #5f6a82;
-    height: 1;
-}
-
-.building {
-    width: 3;
-    margin-right: 0;
-    content-align: center bottom;
-    color: #8ed8ff;
-}
-
-.building:hover {
-    color: #00ffff;
-    text-style: bold;
-}
-
-.high-debt {
-    color: #ff5d7a;
-}
-
-.high-heat {
-    color: #ffb86c;
-}
-
-.ext-py {
-    color: #66d9ff;
-}
-
-.ext-md {
-    color: #9cff8e;
-}
-
-.ext-js, .ext-ts, .ext-tsx, .ext-jsx {
-    color: #ffe080;
-}
-
-.ext-json, .ext-yaml, .ext-yml, .ext-toml {
-    color: #c9b2ff;
+    border-top: solid #1d3d59;
+    background: #071121;
+    color: #8ddfff;
 }

@@ -15,10 +15,12 @@ Screen {
 
 #main-layout {
     height: 1fr;
+    min-height: 12;
 }
 
 #world-view {
     width: 1fr;
+    height: 1fr;
     padding: 1 1;
     overflow: hidden;
     background: #04070f;
@@ -28,8 +30,10 @@ Screen {
 
 #inspector {
     width: 42;
+    height: 1fr;
     border-left: heavy #ff2fcf;
     padding: 1 1;
+    overflow-y: auto;
     background: #0b0612;
     color: #ffd7f4;
 }

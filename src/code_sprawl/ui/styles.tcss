@@ -28,14 +28,27 @@ Screen {
     color: #9cf0ff;
 }
 
-#inspector {
+#right-panel {
     width: 42;
+    height: 1fr;
+}
+
+#inspector {
     height: 1fr;
     border-left: heavy #ff2fcf;
     padding: 1 1;
     overflow-y: auto;
     background: #0b0612;
     color: #ffd7f4;
+}
+
+#minimap {
+    height: 12;
+    border-left: heavy #ff2fcf;
+    border-top: solid #5f2b68;
+    padding: 1 1;
+    background: #0a0d1a;
+    color: #9be7ff;
 }
 
 #hud {

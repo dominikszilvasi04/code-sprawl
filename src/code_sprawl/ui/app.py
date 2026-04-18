@@ -5,7 +5,7 @@ from math import sqrt
 from pathlib import Path
 
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal
+from textual.containers import Horizontal, Vertical
 from textual.widgets import Footer, Header, Label, Static
 
 from ..models import WorldNode, WorldScope
@@ -51,7 +51,9 @@ class CodeSprawlApp(App):
         yield Label("CODE-SPRAWL // WORLD MODE // arrows pan // ctrl+up/down zoom // enter drill", id="banner")
         with Horizontal(id="main-layout"):
             yield WorldViewport()
-            yield Static(id="inspector")
+            with Vertical(id="right-panel"):
+                yield Static(id="inspector")
+                yield Static(id="minimap")
         yield Static(id="hud")
         yield Footer()
 
@@ -131,6 +133,41 @@ class CodeSprawlApp(App):
             f"zoom={self._zoom:.2f}  nodes={len(self._world.nodes)}  "
             "controls: arrows pan | ctrl+up/down zoom | enter drill/open | b back | c center"
         )
+        self._render_minimap()
+
+    def _render_minimap(self) -> None:
+        minimap = self.query_one("#minimap", Static)
+        if self._world is None or not self._world.nodes:
+            minimap.update("[dim]minimap unavailable[/]")
+            return
+
+        w = 28
+        h = 10
+        grid = [[" " for _ in range(w)] for _ in range(h)]
+
+        min_x = min(n.x for n in self._world.nodes)
+        max_x = max(n.x for n in self._world.nodes)
+        min_y = min(n.y for n in self._world.nodes)
+        max_y = max(n.y for n in self._world.nodes)
+
+        span_x = max(1.0, max_x - min_x)
+        span_y = max(1.0, max_y - min_y)
+
+        for node in self._world.nodes:
+            gx = int(((node.x - min_x) / span_x) * (w - 1))
+            gy = int(((node.y - min_y) / span_y) * (h - 1))
+            char = "D" if node.is_dir else "."
+            if node.id == self._selected_id:
+                char = "X"
+            grid[gy][gx] = char
+
+        cam_x = int(((self._camera_x - min_x) / span_x) * (w - 1))
+        cam_y = int(((self._camera_y - min_y) / span_y) * (h - 1))
+        if 0 <= cam_x < w and 0 <= cam_y < h:
+            grid[cam_y][cam_x] = "+"
+
+        body = "\n".join("".join(row) for row in grid)
+        minimap.update(f"[bold cyan]MINIMAP[/]\n{body}")
 
     def _selected_node(self) -> WorldNode | None:
         if self._world is None or self._selected_id is None:

@@ -57,3 +57,40 @@ class CitySnapshot:
     scanned_at: datetime
     todo_count: int = 0
     scan_stats: ScanStats = field(default_factory=ScanStats)
+
+
+@dataclass(slots=True)
+class WorldNode:
+    id: str
+    name: str
+    path: Path
+    is_dir: bool
+    x: float
+    y: float
+    radius: float
+    extension: str = ""
+    loc: int = 0
+    age_days: int = 0
+    commit_count: int = 0
+    complexity: float = 0.0
+    todo_count: int = 0
+    child_count: int = 0
+
+    @property
+    def debt_level(self) -> str:
+        if self.complexity >= 15:
+            return "critical"
+        if self.complexity >= 8:
+            return "high"
+        if self.complexity >= 4:
+            return "medium"
+        return "low"
+
+
+@dataclass(slots=True)
+class WorldScope:
+    root: Path
+    scope: Path
+    nodes: list[WorldNode]
+    scanned_at: datetime
+    scan_stats: ScanStats = field(default_factory=ScanStats)

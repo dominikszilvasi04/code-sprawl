@@ -29,6 +29,9 @@ class CodeSprawlApp(App):
         ("plus", "zoom_in", "Zoom In"),
         ("minus", "zoom_out", "Zoom Out"),
         ("enter", "drill_or_open", "Drill/Open"),
+        ("tab", "select_next_node", "Next Node"),
+        ("shift+tab", "select_prev_node", "Prev Node"),
+        ("g", "snap_to_selected", "Snap Camera"),
         ("b", "go_back_scope", "Back Scope"),
         ("c", "center_camera", "Center"),
         ("f", "fit_world", "Fit World"),
@@ -174,6 +177,18 @@ class CodeSprawlApp(App):
             return None
         return next((n for n in self._world.nodes if n.id == self._selected_id), None)
 
+    def _ordered_nodes(self) -> list[WorldNode]:
+        if self._world is None:
+            return []
+        return sorted(
+            self._world.nodes,
+            key=lambda n: (
+                not n.is_dir,
+                (n.x - self._camera_x) ** 2 + (n.y - self._camera_y) ** 2,
+                n.name.lower(),
+            ),
+        )
+
     def _set_hud(self, text: str) -> None:
         self.query_one("#hud", Static).update(text)
 
@@ -202,6 +217,36 @@ class CodeSprawlApp(App):
 
     def action_reload(self) -> None:
         self.run_worker(self._load_scope_async(self.current_scope), exclusive=True)
+
+    def action_select_next_node(self) -> None:
+        nodes = self._ordered_nodes()
+        if not nodes:
+            return
+        if self._selected_id is None:
+            self._selected_id = nodes[0].id
+        else:
+            idx = next((i for i, n in enumerate(nodes) if n.id == self._selected_id), -1)
+            self._selected_id = nodes[(idx + 1) % len(nodes)].id
+        self._render_world()
+
+    def action_select_prev_node(self) -> None:
+        nodes = self._ordered_nodes()
+        if not nodes:
+            return
+        if self._selected_id is None:
+            self._selected_id = nodes[-1].id
+        else:
+            idx = next((i for i, n in enumerate(nodes) if n.id == self._selected_id), -1)
+            self._selected_id = nodes[(idx - 1) % len(nodes)].id
+        self._render_world()
+
+    def action_snap_to_selected(self) -> None:
+        node = self._selected_node()
+        if node is None:
+            return
+        self._camera_x = node.x
+        self._camera_y = node.y
+        self._render_world()
 
     def _pan(self, dx: float, dy: float) -> None:
         step = max(1.5, 5.0 / max(0.45, self._zoom))

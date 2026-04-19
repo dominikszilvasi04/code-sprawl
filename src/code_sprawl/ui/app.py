@@ -69,11 +69,12 @@ class CodeSprawlApp(App):
         self.run_worker(self._load_scope_async(self.current_scope), exclusive=True)
 
     async def _load_scope_async(self, scope: Path) -> None:
+        include_files = scope != self.repo_root
         world = await asyncio.to_thread(
             scan_world_scope,
             self.repo_root,
             scope_path=scope,
-            include_files=True,
+            include_files=include_files,
             max_nodes=260,
         )
 

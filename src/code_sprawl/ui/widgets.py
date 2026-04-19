@@ -193,7 +193,7 @@ class WorldViewport(Static):
                     continue
 
                 dist = sqrt((dx * 0.9) ** 2 + (dy * 1.15) ** 2)
-                edge_noise = ((hash((node.id, dx, dy, self._phase)) % 100) / 100.0 - 0.5) * 0.35
+                edge_noise = ((hash((node.id, dx, dy)) % 100) / 100.0 - 0.5) * 0.18
                 limit = radius + edge_noise
                 if dist <= limit:
                     if abs(dist - radius) <= 0.8:

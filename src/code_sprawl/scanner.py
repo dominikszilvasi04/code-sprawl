@@ -338,7 +338,7 @@ def _layout_world_nodes(scope: Path, nodes: list[WorldNode]) -> list[WorldNode]:
         )
 
     # Relax overlaps (soft-body repulsion) so blobs don't stack on top of each other.
-    for _ in range(34):
+    for _ in range(46):
         moved = False
         for i in range(len(positioned)):
             a = positioned[i]
@@ -348,7 +348,14 @@ def _layout_world_nodes(scope: Path, nodes: list[WorldNode]) -> list[WorldNode]:
                 dy = b.y - a.y
                 dist = sqrt(dx * dx + dy * dy)
 
-                min_dist = (a.radius + b.radius) * 1.95
+                if a.is_dir and b.is_dir:
+                    spacing_factor = 2.55
+                elif a.is_dir or b.is_dir:
+                    spacing_factor = 2.05
+                else:
+                    spacing_factor = 1.55
+
+                min_dist = (a.radius + b.radius) * spacing_factor + 0.75
                 if dist >= min_dist:
                     continue
 
@@ -356,7 +363,7 @@ def _layout_world_nodes(scope: Path, nodes: list[WorldNode]) -> list[WorldNode]:
                     dx, dy, dist = 0.001, 0.001, 0.0015
 
                 overlap = min_dist - dist
-                push = overlap * 0.50
+                push = overlap * 0.56
                 nx = dx / dist
                 ny = dy / dist
 
@@ -404,7 +411,7 @@ def _layout_world_nodes(scope: Path, nodes: list[WorldNode]) -> list[WorldNode]:
     for node in positioned:
         max_extent = max(max_extent, abs(node.x) + node.radius, abs(node.y) + node.radius)
 
-    target_extent = max(28.0, min(68.0, 18.0 + sqrt(count) * 3.1))
+    target_extent = max(32.0, min(82.0, 22.0 + sqrt(count) * 3.8))
     scale = target_extent / max_extent
     radius_scale = min(1.05, max(0.72, scale))
 

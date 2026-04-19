@@ -138,3 +138,29 @@ jobs:
 
       - name: Run pip-audit
         run: pip-audit
+
+  merge-gate:
+    name: Merge gate
+    runs-on: ubuntu-latest
+    needs: [lint-and-format, type-check, test, packaging]
+    if: always()
+    steps:
+      - name: Verify required jobs passed
+        run: |
+          if [ "${{ needs.lint-and-format.result }}" != "success" ]; then
+            echo "lint-and-format failed";
+            exit 1;
+          fi
+          if [ "${{ needs.type-check.result }}" != "success" ]; then
+            echo "type-check failed";
+            exit 1;
+          fi
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "test failed";
+            exit 1;
+          fi
+          if [ "${{ needs.packaging.result }}" != "success" ]; then
+            echo "packaging failed";
+            exit 1;
+          fi
+          echo "All required checks passed."

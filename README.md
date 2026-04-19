@@ -55,6 +55,7 @@ Convenience commands:
 GitHub Actions workflows are included for full automation:
 
 - `CI` workflow: linting, formatting checks, type checks, test matrix, coverage artifact, package build validation
+- `Merge gate` job: single roll-up status check intended to be marked as required for PR merges
 - `CodeQL` workflow: static security analysis for Python
 - `Release` workflow: build + publish on tags matching `v*` (requires `PYPI_API_TOKEN` secret)
 
@@ -63,6 +64,11 @@ Workflow files:
 - `.github/workflows/ci.yml`
 - `.github/workflows/codeql.yml`
 - `.github/workflows/release.yml`
+
+### Recommended branch protection
+In GitHub branch protection rules for `main`, require status check:
+
+- `Merge gate`
 
 ## Controls
 | Action | Keys |

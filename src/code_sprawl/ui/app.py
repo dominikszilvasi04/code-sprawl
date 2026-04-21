@@ -48,6 +48,7 @@ class CodeSprawlApp(App):
         self._camera_x = 0.0
         self._camera_y = 0.0
         self._zoom = 1.0
+        self._scope_cache: dict[tuple[Path, bool], WorldScope] = {}
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -70,13 +71,17 @@ class CodeSprawlApp(App):
 
     async def _load_scope_async(self, scope: Path) -> None:
         include_files = scope != self.repo_root
-        world = await asyncio.to_thread(
-            scan_world_scope,
-            self.repo_root,
-            scope_path=scope,
-            include_files=include_files,
-            max_nodes=260,
-        )
+        cache_key = (scope.resolve(), include_files)
+        world = self._scope_cache.get(cache_key)
+        if world is None:
+            world = await asyncio.to_thread(
+                scan_world_scope,
+                self.repo_root,
+                scope_path=scope,
+                include_files=include_files,
+                max_nodes=260,
+            )
+            self._scope_cache[cache_key] = world
 
         self._world = world
         self.current_scope = world.scope
@@ -225,6 +230,8 @@ class CodeSprawlApp(App):
         )
 
     def action_reload(self) -> None:
+        self._scope_cache.clear()
+        self._set_hud("Rescanning world")
         self.run_worker(self._load_scope_async(self.current_scope), exclusive=True)
 
     def action_select_next_node(self) -> None:
@@ -299,6 +306,7 @@ class CodeSprawlApp(App):
 
         if node.is_dir:
             self.scope_stack.append(self.current_scope)
+            self._set_hud(f"Entering {node.name}...")
             self.run_worker(self._load_scope_async(node.path), exclusive=True)
             return
 
@@ -319,6 +327,7 @@ class CodeSprawlApp(App):
         if not self.scope_stack:
             return
         previous = self.scope_stack.pop()
+        self._set_hud(f"Returning to {previous.name}...")
         self.run_worker(self._load_scope_async(previous), exclusive=True)
 
     def on_world_viewport_node_focused(self, message: WorldViewport.NodeFocused) -> None:

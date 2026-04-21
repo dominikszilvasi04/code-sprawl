@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from math import sqrt
+from time import monotonic
 
 from rich.console import RenderableType
 from rich.text import Text
@@ -30,6 +31,10 @@ class WorldViewport(Static):
         self.zoom = 1.0
         self.selected_id: str | None = None
         self._phase = 0
+        self._last_click_time = 0.0
+        self._last_click_node_id: str | None = None
+        self._last_click_world_x = 0.0
+        self._last_click_world_y = 0.0
 
     def on_mount(self) -> None:
         self.set_interval(0.28, self._tick)
@@ -92,12 +97,26 @@ class WorldViewport(Static):
         if node is None:
             return
 
+        now = monotonic()
         already_selected = node.id == self.selected_id
         self.selected_id = node.id
         self.post_message(self.NodeFocused(node))
 
-        if already_selected and event.chain >= 2:
+        close_to_last_click = (
+            abs(world_x - self._last_click_world_x) <= max(0.9, 2.4 / max(0.6, self.zoom))
+            and abs(world_y - self._last_click_world_y) <= max(0.9, 2.4 / max(0.6, self.zoom))
+        )
+        is_double_click = event.chain >= 2 or (
+            self._last_click_node_id == node.id and (now - self._last_click_time) <= 0.34 and close_to_last_click
+        )
+
+        if already_selected and is_double_click:
             self.post_message(self.NodeActivated(node))
+
+        self._last_click_time = now
+        self._last_click_node_id = node.id
+        self._last_click_world_x = world_x
+        self._last_click_world_y = world_y
 
     def render(self) -> RenderableType:
         width = max(16, self.size.width)
@@ -241,7 +260,18 @@ class WorldViewport(Static):
         if not base:
             return
 
-        short = base[: max(2, min(6, int(radius * 1.4)))].upper()
+        max_chars = int(radius * 1.9)
+        if self.zoom >= 1.25:
+            max_chars += int((self.zoom - 1.25) * 5.0)
+        max_chars = max(3, min(20, max_chars))
+
+        if len(base) <= max_chars:
+            short = base.upper()
+        elif max_chars <= 3:
+            short = base[:max_chars].upper()
+        else:
+            short = f"{base[: max_chars - 1].upper()}~"
+
         token = f"[{short}]"
 
         start = sx - len(token) // 2
@@ -249,7 +279,7 @@ class WorldViewport(Static):
             return
 
         if radius < 2:
-            token = short[:2]
+            token = short[: min(3, len(short))]
             start = sx - len(token) // 2
 
         style = "bold cyan"

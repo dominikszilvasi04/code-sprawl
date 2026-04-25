@@ -102,12 +102,13 @@ class WorldViewport(Static):
         self.selected_id = node.id
         self.post_message(self.NodeFocused(node))
 
-        close_to_last_click = (
-            abs(world_x - self._last_click_world_x) <= max(0.9, 2.4 / max(0.6, self.zoom))
-            and abs(world_y - self._last_click_world_y) <= max(0.9, 2.4 / max(0.6, self.zoom))
-        )
+        close_to_last_click = abs(world_x - self._last_click_world_x) <= max(
+            0.9, 2.4 / max(0.6, self.zoom)
+        ) and abs(world_y - self._last_click_world_y) <= max(0.9, 2.4 / max(0.6, self.zoom))
         is_double_click = event.chain >= 2 or (
-            self._last_click_node_id == node.id and (now - self._last_click_time) <= 0.34 and close_to_last_click
+            self._last_click_node_id == node.id
+            and (now - self._last_click_time) <= 0.34
+            and close_to_last_click
         )
 
         if already_selected and is_double_click:

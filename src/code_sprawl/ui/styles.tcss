@@ -31,6 +31,16 @@ Screen {
 #right-panel {
     width: 42;
     height: 1fr;
+    padding: 0 0 0 1;
+}
+
+#panel-title {
+    height: 3;
+    padding: 0 1;
+    color: #b7f2ff;
+    background: #070e1a;
+    border-left: heavy #ff2fcf;
+    border-bottom: solid #3a4a6e;
 }
 
 #inspector {

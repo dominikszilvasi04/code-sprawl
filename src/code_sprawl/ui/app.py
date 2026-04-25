@@ -53,12 +53,13 @@ class CodeSprawlApp(App):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Label(
-            "CODE-SPRAWL // WORLD MODE // arrows pan // ctrl+up/down zoom // enter drill",
+            "CODE-SPRAWL // arrows pan • ctrl zoom • enter drill • b back • r rescan",
             id="banner",
         )
         with Horizontal(id="main-layout"):
             yield WorldViewport()
             with Vertical(id="right-panel"):
+                yield Static(id="panel-title")
                 yield Static(id="inspector")
                 yield Static(id="minimap")
         yield Static(id="hud")
@@ -140,15 +141,17 @@ class CodeSprawlApp(App):
         else:
             self._set_inspector("World", "No node selected")
 
+        scope_name = "." if self.current_scope == self.repo_root else self.current_scope.relative_to(self.repo_root).as_posix()
+        selected_name = selected.name if selected is not None else "none"
+        self._set_panel_title(f"scope: {scope_name}  |  selected: {selected_name}")
+
         zoom_ratio = (self._zoom - 0.45) / (3.4 - 0.45)
         zoom_ratio = max(0.0, min(1.0, zoom_ratio))
         filled = int(zoom_ratio * 10)
         zoom_bar = "[" + ("#" * filled) + ("-" * (10 - filled)) + "]"
 
         self._set_hud(
-            f"scope={self.current_scope.relative_to(self.repo_root) if self.current_scope != self.repo_root else '.'}  "
-            f"zoom={self._zoom:.2f}{zoom_bar}  nodes={len(self._world.nodes)}  "
-            "controls: arrows pan | ctrl+up/down zoom | tab cycle | g snap | enter drill | b back | f fit"
+            f"scope={scope_name} | zoom={self._zoom:.2f}{zoom_bar} | nodes={len(self._world.nodes)} | tab cycle | g snap | f fit"
         )
         self._render_minimap()
 
@@ -205,6 +208,9 @@ class CodeSprawlApp(App):
 
     def _set_hud(self, text: str) -> None:
         self.query_one("#hud", Static).update(text)
+
+    def _set_panel_title(self, text: str) -> None:
+        self.query_one("#panel-title", Static).update(f"[bold cyan]{text}[/]")
 
     def _set_inspector(self, title: str, body: str) -> None:
         self.query_one("#inspector", Static).update(f"[bold cyan]{title}[/]\n\n{body}")

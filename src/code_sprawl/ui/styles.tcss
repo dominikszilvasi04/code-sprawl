@@ -7,10 +7,9 @@ Screen {
     dock: top;
     height: 1;
     padding: 0 1;
-    color: #9be7ff;
-    text-style: bold;
-    background: #08101d;
-    border-bottom: solid #1e3e5b;
+    color: #8ccfe0;
+    background: #07101b;
+    border-bottom: solid #16324a;
 }
 
 #main-layout {
@@ -24,8 +23,8 @@ Screen {
     padding: 1 1;
     overflow: hidden;
     background: #04070f;
-    border: heavy #00c2ff;
-    color: #9cf0ff;
+    border: solid #17445f;
+    color: #94dff0;
 }
 
 #right-panel {
@@ -34,38 +33,29 @@ Screen {
     padding: 0 0 0 1;
 }
 
-#panel-title {
-    height: 3;
-    padding: 0 1;
-    color: #b7f2ff;
-    background: #070e1a;
-    border-left: heavy #ff2fcf;
-    border-bottom: solid #3a4a6e;
-}
-
 #inspector {
     height: 1fr;
-    border-left: heavy #ff2fcf;
+    border-left: solid #5d2d60;
     padding: 1 1;
     overflow-y: auto;
-    background: #0b0612;
-    color: #ffd7f4;
+    background: #0a0710;
+    color: #e9d5e8;
 }
 
 #minimap {
     height: 12;
-    border-left: heavy #ff2fcf;
-    border-top: solid #5f2b68;
+    border-left: solid #5d2d60;
+    border-top: solid #402341;
     padding: 1 1;
     background: #0a0d1a;
-    color: #9be7ff;
+    color: #99dce9;
 }
 
 #hud {
     dock: bottom;
     height: 1;
     padding: 0 1;
-    border-top: solid #1d3d59;
-    background: #071121;
-    color: #8ddfff;
+    border-top: solid #183147;
+    background: #06101b;
+    color: #8ac7d7;
 }

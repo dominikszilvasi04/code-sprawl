@@ -37,7 +37,7 @@ class WorldViewport(Static):
         self._last_click_world_y = 0.0
 
     def on_mount(self) -> None:
-        self.set_interval(0.28, self._tick)
+        self.set_interval(0.8, self._tick)
 
     def _tick(self) -> None:
         self._phase = (self._phase + 1) % 6
@@ -129,11 +129,6 @@ class WorldViewport(Static):
         if self.scope is None:
             return "Loading world..."
 
-        seed = (self._phase * 7) % 17
-        for y in range(0, height, 3):
-            x = ((y * 11) + seed) % max(1, width)
-            buffer[y][x] = "."
-
         nodes = sorted(self.scope.nodes, key=lambda n: (n.is_dir, n.radius), reverse=True)
 
         for node in nodes:
@@ -151,9 +146,6 @@ class WorldViewport(Static):
                 self._draw_blob(buffer, node, sx, sy, radius, label_spans)
             else:
                 self._draw_file_node(buffer, node, sx, sy)
-
-            if self.selected_id == node.id:
-                self._draw_selection_ring(buffer, sx, sy, radius + 1)
 
         cx = width // 2
         cy = height // 2
@@ -200,9 +192,6 @@ class WorldViewport(Static):
             edge_char = "O"
             core_char = "D"
 
-        if node.commit_count >= 20:
-            fill_char = "*"
-
         for dy in range(-radius - 1, radius + 2):
             py = sy + dy
             if py < 0 or py >= height:
@@ -222,8 +211,7 @@ class WorldViewport(Static):
                         buffer[py][px] = fill_char
 
         if 0 <= sx < width and 0 <= sy < height:
-            pulse = core_char if self._phase % 2 == 0 else "+"
-            buffer[sy][sx] = pulse
+            buffer[sy][sx] = core_char
 
         self._draw_inner_label(buffer, sx, sy, radius, node.name, node, label_spans)
 
@@ -261,27 +249,23 @@ class WorldViewport(Static):
         if not base:
             return
 
-        max_chars = int(radius * 1.9)
-        if self.zoom >= 1.25:
-            max_chars += int((self.zoom - 1.25) * 5.0)
-        max_chars = max(3, min(20, max_chars))
+        max_chars = int(radius * 1.4)
+        if self.zoom >= 1.2:
+            max_chars += int((self.zoom - 1.2) * 2.0)
+        max_chars = max(3, min(12, max_chars))
 
         if len(base) <= max_chars:
             short = base.upper()
         elif max_chars <= 3:
             short = base[:max_chars].upper()
         else:
-            short = f"{base[: max_chars - 1].upper()}~"
+            short = f"{base[: max_chars - 1].upper()}…"
 
-        token = f"[{short}]"
+        token = short
 
         start = sx - len(token) // 2
         if start < 0 or (start + len(token)) >= width:
             return
-
-        if radius < 2:
-            token = short[: min(3, len(short))]
-            start = sx - len(token) // 2
 
         style = "bold cyan"
         if node.debt_level == "critical":
@@ -295,17 +279,3 @@ class WorldViewport(Static):
                 buffer[sy][x] = ch
 
         label_spans.append((sy, start, start + len(token), style))
-
-    def _draw_selection_ring(self, buffer: list[list[str]], sx: int, sy: int, radius: int) -> None:
-        height = len(buffer)
-        width = len(buffer[0]) if buffer else 0
-
-        ring_char = "~" if self._phase % 2 == 0 else "="
-        for dy in range(-radius, radius + 1):
-            for dx in range(-radius, radius + 1):
-                dist = sqrt(dx * dx + dy * dy)
-                if abs(dist - radius) <= 0.65:
-                    py = sy + dy
-                    px = sx + dx
-                    if 0 <= px < width and 0 <= py < height and buffer[py][px] == " ":
-                        buffer[py][px] = ring_char

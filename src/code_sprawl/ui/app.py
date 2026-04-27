@@ -53,13 +53,12 @@ class CodeSprawlApp(App):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Label(
-            "CODE-SPRAWL // arrows pan • ctrl zoom • enter drill • b back • r rescan",
+            "CODE-SPRAWL // arrows pan • zoom • enter drill • b back",
             id="banner",
         )
         with Horizontal(id="main-layout"):
             yield WorldViewport()
             with Vertical(id="right-panel"):
-                yield Static(id="panel-title")
                 yield Static(id="inspector")
                 yield Static(id="minimap")
         yield Static(id="hud")
@@ -143,7 +142,6 @@ class CodeSprawlApp(App):
 
         scope_name = "." if self.current_scope == self.repo_root else self.current_scope.relative_to(self.repo_root).as_posix()
         selected_name = selected.name if selected is not None else "none"
-        self._set_panel_title(f"scope: {scope_name}  |  selected: {selected_name}")
 
         zoom_ratio = (self._zoom - 0.45) / (3.4 - 0.45)
         zoom_ratio = max(0.0, min(1.0, zoom_ratio))
@@ -151,7 +149,7 @@ class CodeSprawlApp(App):
         zoom_bar = "[" + ("#" * filled) + ("-" * (10 - filled)) + "]"
 
         self._set_hud(
-            f"scope={scope_name} | zoom={self._zoom:.2f}{zoom_bar} | nodes={len(self._world.nodes)} | tab cycle | g snap | f fit"
+            f"scope={scope_name} | zoom={self._zoom:.2f}{zoom_bar} | nodes={len(self._world.nodes)}"
         )
         self._render_minimap()
 
@@ -209,9 +207,6 @@ class CodeSprawlApp(App):
     def _set_hud(self, text: str) -> None:
         self.query_one("#hud", Static).update(text)
 
-    def _set_panel_title(self, text: str) -> None:
-        self.query_one("#panel-title", Static).update(f"[bold cyan]{text}[/]")
-
     def _set_inspector(self, title: str, body: str) -> None:
         self.query_one("#inspector", Static).update(f"[bold cyan]{title}[/]\n\n{body}")
 
@@ -228,10 +223,7 @@ class CodeSprawlApp(App):
                 f"Complexity: {node.complexity:.1f} ({node.debt_level})\n"
                 f"TODOs: {node.todo_count}\n"
                 f"Age: {node.age_days} days\n\n"
-                "Interaction:\n"
-                "- Click blob/file to select\n"
-                "- Double-click or Enter to drill/open\n"
-                "- b to go back"
+                "Click or Enter to drill/open"
             ),
         )
 

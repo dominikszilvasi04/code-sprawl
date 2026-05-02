@@ -495,6 +495,12 @@ def scan_world_scope(
             except OSError:
                 child_count = file_count
 
+            try:
+                entry_stat = entry.stat()
+                age_days = max(0, int((now.timestamp() - entry_stat.st_mtime) // 86400))
+            except OSError:
+                age_days = 0
+
             radius = max(3.0, min(9.0, 3.0 + sqrt(max(1, file_count)) * 0.45))
             nodes.append(
                 WorldNode(
@@ -506,7 +512,7 @@ def scan_world_scope(
                     y=0.0,
                     radius=radius,
                     loc=loc,
-                    age_days=0,
+                    age_days=age_days,
                     commit_count=commits,
                     complexity=complexity,
                     todo_count=todos,

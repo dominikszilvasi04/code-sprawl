@@ -140,7 +140,11 @@ class CodeSprawlApp(App):
         else:
             self._set_inspector("World", "No node selected")
 
-        scope_name = "." if self.current_scope == self.repo_root else self.current_scope.relative_to(self.repo_root).as_posix()
+        scope_name = (
+            "."
+            if self.current_scope == self.repo_root
+            else self.current_scope.relative_to(self.repo_root).as_posix()
+        )
 
         zoom_ratio = (self._zoom - 0.45) / (3.4 - 0.45)
         zoom_ratio = max(0.0, min(1.0, zoom_ratio))

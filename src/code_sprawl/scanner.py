@@ -90,7 +90,11 @@ def _load_gitignore_spec(root: Path) -> PathSpec | None:
     return PathSpec.from_lines("gitignore", patterns)
 
 
-def _is_gitignored(root: Path, path: Path, spec: PathSpec | None, *, is_dir: bool = False) -> bool:
+def _is_gitignored(root: Path,
+                   path: Path,
+                   spec: PathSpec | None,
+                   *,
+                   is_dir: bool = False) -> bool:
     if spec is None:
         return False
 
@@ -141,7 +145,8 @@ def _complexity_for_python(path: Path) -> float:
         return 0.0
 
 
-def _collect_commit_heat(root: Path, max_commits: int = 600) -> Counter[str]:
+def _collect_commit_heat(root: Path,
+                         max_commits: int = 600) -> Counter[str]:
     heat: Counter[str] = Counter()
     try:
         for idx, commit in enumerate(Repository(str(root)).traverse_commits()):
@@ -157,7 +162,9 @@ def _collect_commit_heat(root: Path, max_commits: int = 600) -> Counter[str]:
     return heat
 
 
-def scan_repository(root_path: str | Path, *, include_empty_districts: bool = True) -> CitySnapshot:
+def scan_repository(root_path: str | Path,
+                    *,
+                    include_empty_districts: bool = True) -> CitySnapshot:
     root = Path(root_path).resolve()
     now = datetime.now()
     commit_heat = _collect_commit_heat(root)
@@ -213,17 +220,15 @@ def scan_repository(root_path: str | Path, *, include_empty_districts: bool = Tr
             rel_file = full_path.relative_to(root).as_posix()
             commits = commit_heat.get(rel_file, 0)
 
-            building = Building(
-                path=full_path,
-                name=file_name,
-                extension=full_path.suffix.lower() or "(none)",
-                loc=loc,
-                age_days=age_days,
-                modified_ts=stat.st_mtime,
-                commit_count=commits,
-                complexity=complexity,
-                todo_count=todo_count,
-            )
+            building = Building(path=full_path,
+                                name=file_name,
+                                extension=full_path.suffix.lower() or "(none)",
+                                loc=loc,
+                                age_days=age_days,
+                                modified_ts=stat.st_mtime,
+                                commit_count=commits,
+                                complexity=complexity,
+                                todo_count=todo_count)
             buildings.append(building)
             total_todos += todo_count
             stats.files_included += 1
@@ -241,13 +246,11 @@ def scan_repository(root_path: str | Path, *, include_empty_districts: bool = Tr
     districts = sorted(
         district_map.values(), key=lambda d: (len(d.buildings), d.name), reverse=True
     )
-    return CitySnapshot(
-        root=root,
-        districts=districts,
-        scanned_at=now,
-        todo_count=total_todos,
-        scan_stats=stats,
-    )
+    return CitySnapshot(root=root,
+                        districts=districts,
+                        scanned_at=now,
+                        todo_count=total_todos,
+                        scan_stats=stats)
 
 
 def _hash_unit(value: str) -> float:
@@ -256,14 +259,12 @@ def _hash_unit(value: str) -> float:
     return integer / float(2**64 - 1)
 
 
-def _aggregate_directory_metrics(
-    root: Path,
-    directory: Path,
-    gitignore_spec: PathSpec | None,
-    commit_heat: Counter[str],
-    *,
-    max_files: int = 800,
-) -> tuple[int, int, int, float, int]:
+def _aggregate_directory_metrics(root: Path,
+                                 directory: Path,
+                                 gitignore_spec: PathSpec | None,
+                                 commit_heat: Counter[str],
+                                 *,
+                                 max_files: int = 800) -> tuple[int, int, int, float, int]:
     loc = 0
     todos = 0
     commits = 0
@@ -299,7 +300,8 @@ def _aggregate_directory_metrics(
     return loc, todos, commits, complexity, file_count
 
 
-def _layout_world_nodes(scope: Path, nodes: list[WorldNode]) -> list[WorldNode]:
+def _layout_world_nodes(scope: Path,
+                        nodes: list[WorldNode]) -> list[WorldNode]:
     if not nodes:
         return []
 
@@ -439,13 +441,11 @@ def _layout_world_nodes(scope: Path, nodes: list[WorldNode]) -> list[WorldNode]:
     return normalized
 
 
-def scan_world_scope(
-    root_path: str | Path,
-    *,
-    scope_path: str | Path | None = None,
-    include_files: bool = True,
-    max_nodes: int = 220,
-) -> WorldScope:
+def scan_world_scope(root_path: str | Path,
+                     *,
+                     scope_path: str | Path | None = None,
+                     include_files: bool = True,
+                     max_nodes: int = 220) -> WorldScope:
     root = Path(root_path).resolve()
     scope = Path(scope_path).resolve() if scope_path is not None else root
     now = datetime.now()

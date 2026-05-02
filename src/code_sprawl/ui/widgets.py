@@ -65,10 +65,10 @@ class WorldViewport(Static):
         return next((n for n in self.scope.nodes if n.id == self.selected_id), None)
 
     def _to_screen(self, node: WorldNode, width: int, height: int) -> tuple[int, int, int]:
-        sx = int((node.x - self.camera_x) * self.zoom + width / 2)
-        sy = int((node.y - self.camera_y) * self.zoom + height / 2)
+        screen_x = int((node.x - self.camera_x) * self.zoom + width / 2) 
+        screen_y = int((node.y - self.camera_y) * self.zoom + height / 2)
         radius = max(1, int(node.radius * self.zoom))
-        return sx, sy, radius
+        return screen_x, screen_y, radius
 
     def _pick_node(self, world_x: float, world_y: float) -> WorldNode | None:
         if self.scope is None:
@@ -147,10 +147,10 @@ class WorldViewport(Static):
             else:
                 self._draw_file_node(buffer, node, sx, sy)
 
-        cx = width // 2
-        cy = height // 2
-        if 0 <= cx < width and 0 <= cy < height:
-            buffer[cy][cx] = "+"
+        camera_x = width // 2 
+        camera_y = height // 2
+        if 0 <= camera_x < width and 0 <= camera_y < height:
+            buffer[camera_y][camera_x] = "+"
 
         raw = "\n".join("".join(row) for row in buffer)
         text = Text(raw)
@@ -167,15 +167,9 @@ class WorldViewport(Static):
 
         return text
 
-    def _draw_blob(
-        self,
-        buffer: list[list[str]],
-        node: WorldNode,
-        sx: int,
-        sy: int,
-        radius: int,
-        label_spans: list[tuple[int, int, int, str]],
-    ) -> None:
+    def _draw_blob(self, buffer: list[list[str]], 
+                   node: WorldNode, sx: int, sy: int, radius: int, 
+                   label_spans: list[tuple[int, int, int, str]]) -> None:
         height = len(buffer)
         width = len(buffer[0]) if buffer else 0
 
@@ -231,16 +225,11 @@ class WorldViewport(Static):
         buffer[sy - 1][sx] = "^"
         buffer[sy + 1][sx] = "v"
 
-    def _draw_inner_label(
-        self,
-        buffer: list[list[str]],
-        sx: int,
-        sy: int,
-        radius: int,
-        text: str,
-        node: WorldNode,
-        label_spans: list[tuple[int, int, int, str]],
-    ) -> None:
+    def _draw_inner_label(self, buffer: list[list[str]], 
+                          sx: int, sy: int, radius: int, 
+                          text: str, node: WorldNode, 
+                          label_spans: list[tuple[int, int, int, str]]) -> None:
+        
         if sy < 0 or sy >= len(buffer):
             return
 

@@ -1,74 +1,49 @@
 # Code-Sprawl
 
-A fun neon Terminal UI that turns a local repository into an interactive 2D world.
-
-## Highlights
-- Full-screen world viewport with animated folder "blobs"
-- Free camera pan and zoom controls
-- Folder drill-down navigation and scope backtracking
-- File and folder inspector with repo metrics
-- Minimap for spatial orientation
-
-## Requirements
-- Python 3.10+
-- Git repository (local)
+Code-Sprawl is a Textual-based terminal application that scans a local repository and renders it as a 2D world.
 
 ## What it shows
-- Folders as districts
-- Files as buildings
-- LoC as building height
-- File age as condition
-- Python complexity as technical debt heat
-- TODO count as weather signal
+- Folders as nodes in the world
+- Files as smaller nodes
+- Node size reflects repository metrics in the viewport
+- File age, commit count, complexity, and TODO count in the inspector
+- A minimap for the current scope
 
-## Quick start
-1. Create and activate a virtual environment
-2. Install deps:
-   - `pip install -e .`
-3. Run in the current repo:
-   - `code-sprawl`
-4. Run against another repo:
-   - `code-sprawl C:/path/to/repo`
+## Requirements
+- Python 3.10 or later
+- A local repository path to scan
 
-## Development setup
-Install development dependencies:
+## Installation
+Create a virtual environment, then install the package:
 
-- `python -m pip install -e .[dev]`
+```bash
+python -m pip install -e .
+```
 
-Enable pre-commit hooks:
+For development dependencies:
 
-- `pre-commit install`
+```bash
+python -m pip install -e .[dev]
+```
 
-Local quality checks:
+## Running
+Run against the current directory:
 
-- `ruff check .`
-- `black --check .`
-- `mypy`
-- `pytest`
+```bash
+code-sprawl
+```
 
-Convenience commands:
+Run against a specific path:
 
-- `make check` (lint + format-check + type-check + tests)
-- `make all` (check + security audit + build + package checks)
+```bash
+code-sprawl C:/path/to/repo
+```
 
-## CI/CD pipelines
-GitHub Actions workflows are included for full automation:
+If the console script is not on your PATH, use:
 
-- `CI` workflow: linting, formatting checks, type checks, test matrix, coverage artifact, package build validation
-- `Merge gate` job: single roll-up status check intended to be marked as required for PR merges
-- `CodeQL` workflow: static security analysis for Python
-- `Release` workflow: build + publish on tags matching `v*` (requires `PYPI_API_TOKEN` secret)
-
-Workflow files:
-
-- `.github/workflows/ci.yml`
-- `.github/workflows/codeql.yml`
-- `.github/workflows/release.yml`
-
-### Recommended branch protection
-In GitHub branch protection rules for `main`, require status check:
-
-- `Merge gate`
+```bash
+python -m code_sprawl.main
+```
 
 ## Controls
 | Action | Keys |
@@ -77,7 +52,7 @@ In GitHub branch protection rules for `main`, require status check:
 | Zoom | `Ctrl+Up` / `Ctrl+Down` or `+` / `-` |
 | Select next / previous node | `Tab` / `Shift+Tab` |
 | Snap camera to selected node | `g` |
-| Drill into folder / open file details | `Enter` |
+| Drill into a folder | `Enter` |
 | Go back one folder scope | `b` |
 | Fit world bounds | `f` |
 | Center camera | `c` |
@@ -86,19 +61,16 @@ In GitHub branch protection rules for `main`, require status check:
 
 Mouse:
 
-- Single click: select node
-- Double click: drill/open selected node
+- Single click: focus a node
+- Double click: activate the focused node
 
-## Troubleshooting
-- If the world looks sparse after switching scope, press `f` to fit the camera.
-- If `code-sprawl` is not found in PowerShell, run:
-   - `python -m code_sprawl.main`
-- If dependencies changed, reinstall editable package:
-   - `python -m pip install -e .[dev]`
-- For large repos, keep default zoom and use minimap + `Tab`/`Shift+Tab` navigation.
+## Development checks
+Common checks used in this repository:
 
-## Next upgrades
-- True commit timeline time-travel slider
-- Animated traffic between hot files
-- GitHub Actions district health
-- Debt monster mini-game
+- `black --check .`
+- `ruff check .`
+- `pytest`
+
+## Notes
+- The application is designed for local repositories.
+- Commit-related metrics depend on git history being available for the scanned path.

@@ -3,9 +3,11 @@ from __future__ import annotations
 import asyncio
 from math import sqrt
 from pathlib import Path
+
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Footer, Header, Label, Static
+
 from ..models import WorldNode, WorldScope
 from ..scanner import scan_world_scope
 from .widgets import WorldViewport
@@ -71,11 +73,13 @@ class CodeSprawlApp(App):
         cache_key = (scope.resolve(), include_files)
         world = self._scope_cache.get(cache_key)
         if world is None:
-            world = await asyncio.to_thread(scan_world_scope,
-                                            self.repo_root,
-                                            scope_path=scope,
-                                            include_files=include_files,
-                                            max_nodes=260)
+            world = await asyncio.to_thread(
+                scan_world_scope,
+                self.repo_root,
+                scope_path=scope,
+                include_files=include_files,
+                max_nodes=260,
+            )
             self._scope_cache[cache_key] = world
         self._world = world
         self.current_scope = world.scope
@@ -165,16 +169,16 @@ class CodeSprawlApp(App):
         span_y = max(1.0, max_y - min_y)
 
         for node in self._world.nodes:
-            grid_x = int(((node.x - min_x) / span_x) * (w - 1)) 
-            grid_y = int(((node.y - min_y) / span_y) * (h - 1))
+            grid_x = int(((node.x - min_x) / span_x) * (width - 1))
+            grid_y = int(((node.y - min_y) / span_y) * (height - 1))
             char = "D" if node.is_dir else "."
             if node.id == self._selected_id:
                 char = "X"
             grid[grid_y][grid_x] = char
 
-        camera_x = int(((self._camera_x - min_x) / span_x) * (w - 1))
-        camera_y = int(((self._camera_y - min_y) / span_y) * (h - 1))
-        if 0 <= camera_x < w and 0 <= camera_y < h:
+        camera_x = int(((self._camera_x - min_x) / span_x) * (width - 1))
+        camera_y = int(((self._camera_y - min_y) / span_y) * (height - 1))
+        if 0 <= camera_x < width and 0 <= camera_y < height:
             grid[camera_y][camera_x] = "+"
 
         body = "\n".join("".join(row) for row in grid)
